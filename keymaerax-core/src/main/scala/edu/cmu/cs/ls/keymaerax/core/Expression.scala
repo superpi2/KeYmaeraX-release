@@ -33,6 +33,8 @@ object ProgramKind extends Kind { override def toString = "Program" }
 object DifferentialProgramKind extends Kind/*ProgramKind.type*/ { override def toString = "DifferentialProgram" }
 /** Function/predicate symbols that are not themselves terms or formulas are of kind FunctionKind */
 object FunctionKind extends Kind { override def toString = "Function" }
+/** Refinement judgements */
+object RefinementKind extends Kind { override def toString = "Refinement" }
 
 /**
  * Sorts
@@ -607,4 +609,11 @@ object DifferentialProduct {
   }} ensuring(r => r.toSet==StaticSemantics.symbols(ode).filter(x=>x.isInstanceOf[DifferentialSymbol]),
     "StaticSemantics should agree since differential symbols only occur on the left-hand side of differential equations " + StaticSemantics.symbols(ode).toList.filter(x=>x.isInstanceOf[DifferentialSymbol]))
 
+}
+
+
+sealed case class Refinement(a: Program, b: Program) extends Expression {
+  override def kind: Kind = RefinementKind
+
+  override def sort: Sort = Bool
 }
