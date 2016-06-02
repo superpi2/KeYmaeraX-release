@@ -249,6 +249,12 @@ object TOOL_VALUE_PAT {
   val startPattern: Regex = ("^" + regexp.pattern.pattern + "[\\s\\S]*").r
 }
 
+///////////
+// Section: Refinement Relations
+///////////
+object REFINES extends Terminal("<~")
+object REFINE_EQUIV extends Terminal("~~")
+
 /**
  * Created by aplatzer on 6/8/15.
   *
@@ -482,6 +488,10 @@ object KeYmaeraXLexer extends ((String) => List[Token]) {
           consumeColumns(str.length + 8, TOOL_VALUE(str), loc)
         case _ => throw new Exception("Encountered delimited string in non-lemma lexing mode.")
       }
+
+      //Refinements
+      case REFINE_EQUIV.startPattern(_*) => consumeTerminalLength(REFINE_EQUIV, loc)
+      case REFINES.startPattern(_*) => consumeTerminalLength(REFINES, loc)
 
       //These have to come before LBOX,RBOX because otherwise <= becopmes LDIA, EQUALS
       case GREATEREQ.startPattern(_*) => consumeTerminalLength(GREATEREQ, loc)
