@@ -76,13 +76,16 @@ abstract trait BaseMatcher extends Matcher {
   //@todo import a debug flag as in Tactics.DEBUG
   private val DEBUG = System.getProperty("DEBUG", "false")=="true"
 
-  def apply(e1: Expression, e2: Expression): Subst = if (e1.kind==e2.kind || e1.kind==ProgramKind && e2.kind==DifferentialProgramKind)
-    e1 match {
-      case t1: Term => apply(t1, e2.asInstanceOf[Term])
-      case f1: Formula => apply(f1, e2.asInstanceOf[Formula])
-      case p1: DifferentialProgram if !p1.isInstanceOf[ODESystem] => apply(p1, e2.asInstanceOf[DifferentialProgram])
-      case p1: Program => apply(p1, e2.asInstanceOf[Program])
-    } else throw new UnificationException(e1.prettyString, e2.prettyString, "have incompatible kinds " + e1.kind + " and " + e2.kind)
+  def apply(e1: Expression, e2: Expression): Subst =
+    if (e1.kind==e2.kind || e1.kind==ProgramKind && e2.kind==DifferentialProgramKind)
+      e1 match {
+        case t1: Term => apply(t1, e2.asInstanceOf[Term])
+        case f1: Formula => apply(f1, e2.asInstanceOf[Formula])
+        case p1: DifferentialProgram if !p1.isInstanceOf[ODESystem] => apply(p1, e2.asInstanceOf[DifferentialProgram])
+        case p1: Program => apply(p1, e2.asInstanceOf[Program])
+      }
+    else
+      throw new UnificationException(e1.prettyString, e2.prettyString, "have incompatible kinds " + e1.kind + " and " + e2.kind)
 
   //@note To circumvent shortcomings of renaming-unaware unification algorithm, the following code unifies for renaming, renames, and then reunifies the renamed outcomes for substitution
   def apply(e1: Term, e2: Term): Subst = {try {
@@ -297,11 +300,13 @@ class UnificationMatchBase extends BaseMatcher {
     case Less(l, r)         => e2 match {case Less        (l2,r2) => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
 
     // homomorphic cases
-    case Not(g)      => e2 match {case Not(g2)      => unify(g,g2) case _ => ununifiable(e1,e2)}
-    case And(l, r)   => e2 match {case And(l2,r2)   => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
-    case Or(l, r)    => e2 match {case Or(l2,r2)    => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
-    case Imply(l, r) => e2 match {case Imply(l2,r2) => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
-    case Equiv(l, r) => e2 match {case Equiv(l2,r2) => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
+    case Not(g)            => e2 match {case Not(g2)      => unify(g,g2) case _ => ununifiable(e1,e2)}
+    case And(l, r)         => e2 match {case And(l2,r2)   => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
+    case Or(l, r)          => e2 match {case Or(l2,r2)    => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
+    case Imply(l, r)       => e2 match {case Imply(l2,r2) => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
+    case Equiv(l, r)       => e2 match {case Equiv(l2,r2) => unifies(l,r, l2,r2) case _ => ununifiable(e1,e2)}
+    case Refinement(a,b)   => e2 match {case Refinement(a2,b2) => unifies(a,b, a2,b2) case _ => ununifiable(e1, e2)}
+    case ProgramEquiv(a,b) => e2 match {case ProgramEquiv(a2,b2) => unifies(a,b, a2,b2) case _ => ununifiable(e1, e2)}
 
     // NOTE DifferentialFormula in analogy to Differential
     case DifferentialFormula(g) => e2 match {case DifferentialFormula(g2) => unify(g,g2) case _ => ununifiable(e1,e2)}
