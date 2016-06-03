@@ -256,6 +256,10 @@ object Context {
     case f:Quantified             if pos.head==0 => part(f.child, pos.child)
     case f:Modal                  if pos.head==0 => part(f.program, pos.child)
     case f:Modal                  if pos.head==1 => part(f.child, pos.child)
+    case r:Refinement             if pos.head==0 => part(r.a, pos.child)
+    case r:Refinement             if pos.head==1 => part(r.b, pos.child)
+    case r:ProgramEquiv           if pos.head==0 => part(r.a, pos.child)
+    case r:ProgramEquiv           if pos.head==1 => part(r.b, pos.child)
     case _ => throw new IllegalArgumentException("part position " + pos + " of formula " + formula + " may not be defined")
   }}
 
