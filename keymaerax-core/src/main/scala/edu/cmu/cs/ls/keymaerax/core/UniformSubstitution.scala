@@ -390,6 +390,9 @@ final case class USubst(subsDefsInput: immutable.Seq[SubstitutionPair]) extends 
       case DotFormula if !subsDefs.exists(_.what == DotFormula) => DotFormula
       case True | False => formula
 
+      case ProgramEquiv(a,b) => ProgramEquiv(usubst(a), usubst(b))
+      case Refinement(a,b) => Refinement(usubst(a), usubst(b))
+
       //@note except for DifferentialFormula, the following cases are equivalent to f.reapply but are left explicit to enforce revisiting this case when data structure changes.
       // case f:BinaryCompositeTerm => f.reapply(usubst(f.left), usubst(f.right))
 
