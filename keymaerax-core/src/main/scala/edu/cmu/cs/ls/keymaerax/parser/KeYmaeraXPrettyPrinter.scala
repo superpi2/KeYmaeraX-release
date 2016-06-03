@@ -141,6 +141,7 @@ class KeYmaeraXPrinter extends PrettyPrinter {
     case t: BinaryCompositeFormula=>
       wrapLeft(t, pp(q+0, t.left)) + op(t).opcode + wrapRight(t, pp(q+1, t.right))
     case r: Refinement => pp(q+0, r.a) + " " + op(r) + pp(q+1, r.b)
+    case r: ProgramEquiv => pp(q+0, r.a) ++ " " + op(r) + pp(q+1, r.b)
   })
 
   private def pp(q: PosInExpr, program: Program): String = emit(q, program match {

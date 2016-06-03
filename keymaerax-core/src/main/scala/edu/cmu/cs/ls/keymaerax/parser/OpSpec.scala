@@ -228,6 +228,11 @@ object OpSpec {
     case _ => ???
   })
 
+  val sRefineEquiv = BinaryOpSpec[Expression](REFINE_EQUIV, 2, RightAssociative, binprog, (p:Expression, q:Expression) => (p,q) match {
+    case (p:Program, q:Program) => ProgramEquiv.apply(p,q)
+    case _ => ???
+  })
+
   /** Parser needs a lookahead operator when actually already done, so don't dare constructing it */
   val sEOF          = UnitOpSpec  (EOF, Int.MaxValue, _ => throw new AssertionError("Cannot construct EOF"))
   /** Parser needs a lookahead operator when actually already done, so don't dare constructing it */
@@ -279,6 +284,7 @@ object OpSpec {
     case f: Imply        => sImply
     case f: Equiv        => sEquiv
     case r: Refinement   => sRefines
+    case r: ProgramEquiv => sRefineEquiv
 
     // programs
     case p: ProgramConst => sProgramConst

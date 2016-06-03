@@ -298,6 +298,11 @@ object KeYmaeraXParser extends Parser {
       case r :+ Expr(p:Program) :+ Token(REFINES, _) :+ Expr(q:Program) =>
         reduce(st, 3, Expr(Refinement(p, q)), r)
 
+      case r :+ Expr(p:Program) :+ Token(REFINE_EQUIV, _) =>
+        shift(st)
+      case r :+ Expr(p:Program) :+ Token(REFINE_EQUIV, _) :+ Expr(q:Program) =>
+        reduce(st, 3, Expr(ProgramEquiv(p, q)), r)
+
       // nonproductive: help KeYmaeraXLexer recognize := * with whitespaces as ASSIGNANY
       case r :+ Token(ASSIGN,loc1) :+ Token(STAR,loc2) =>
         reduce(st, 2, Bottom :+ Token(ASSIGNANY, loc1--loc2), r)
@@ -791,7 +796,7 @@ object KeYmaeraXParser extends Parser {
     la==EOF ||
     la==DUAL ||              // from P in hybrid games
     la==INVARIANT ||            // extra: additional @annotations
-    la==REFINES
+    la==REFINES || la == REFINE_EQUIV
 
   /** Follow(kind(expr)): Can la follow an expression of the kind of expr? */
   private def followsExpression(expr: Expression, la: Terminal): Boolean = expr match {
@@ -983,6 +988,7 @@ object KeYmaeraXParser extends Parser {
       //case p: ProgramConst => sProgramConst
       //case p: DifferentialProgramConst => sDifferentialProgramConst
       case sRefines.op => sRefines
+      case sRefineEquiv.op => sRefineEquiv
 
       case sAssign.op => if (isDifferentialAssign(st)) sDiffAssign else sAssign
       case sAssignAny.op => sAssignAny
