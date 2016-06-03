@@ -650,7 +650,9 @@ object DerivationInfo {
       , "boxMonotone2", {case () => HilbertCalculus.useAt(DerivedAxioms.boxMonotone2)}),
     new DerivedRuleInfo("CT term congruence"
       , RuleDisplayInfo(SimpleDisplayInfo("CT term congruence", "CTtermCongruence"), SequentDisplay(Nil, "ctx_(f_(??)) = ctx_(g_(??))"::Nil), SequentDisplay(Nil, "f_(??) = g_(??)"::Nil)::Nil)
-      , "CTtermCongruence", {case () => HilbertCalculus.useAt(DerivedAxioms.CTtermCongruence)})
+      , "CTtermCongruence", {case () => HilbertCalculus.useAt(DerivedAxioms.CTtermCongruence)}),
+
+    new CoreAxiomInfo("refine choice comm", ("≤∪ comm", "refineChoiceComm"), "refineChoiceComm", {case () => RefinementCalculus.refineChoiceComm})
   ) ensuring(consistentInfo _, "meta-information on AxiomInfo is consistent with actual (derived) axioms etc.")
 
   private def consistentInfo(list: List[DerivationInfo]): Boolean = {
