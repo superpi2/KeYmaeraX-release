@@ -4,7 +4,8 @@
 */
 /**
  * Differential Dynamic Logic pretty printer in concrete KeYmaera X notation.
- * @author Andre Platzer
+  *
+  * @author Andre Platzer
  * @see "Andre Platzer. A uniform substitution calculus for differential dynamic logic.  arXiv 1503.01981, 2015."
  * @note Code Review 2015-08-24
  */
@@ -20,7 +21,8 @@ import edu.cmu.cs.ls.keymaerax.core._
 
 /**
  * Default KeYmaera X Pretty Printer formats differential dynamic logic expressions
- * @see [[edu.cmu.cs.ls.keymaerax.parser.KeYmaeraXPrecedencePrinter]]
+  *
+  * @see [[edu.cmu.cs.ls.keymaerax.parser.KeYmaeraXPrecedencePrinter]]
  */
 object KeYmaeraXPrettyPrinter extends KeYmaeraXPrecedencePrinter {
   /** This default pretty printer. */
@@ -31,7 +33,8 @@ object KeYmaeraXPrettyPrinter extends KeYmaeraXPrecedencePrinter {
  * Vanilla: KeYmaera X Printer formats differential dynamic logic expressions
  * in KeYmaera X notation according to the concrete syntax of differential dynamic logic
  * with explicit statement end ``;`` operator.
- * @example
+  *
+  * @example
  * Printing formulas to strings is straightforward using [[edu.cmu.cs.ls.keymaerax.parser.KeYmaeraXPrettyPrinter.apply]]:
  * {{{
  * val pp = KeYmaeraXPrettyPrinter
@@ -140,8 +143,8 @@ class KeYmaeraXPrinter extends PrettyPrinter {
     case t: UnaryCompositeFormula=> op(t).opcode + wrapChild(t, pp(q+0, t.child))
     case t: BinaryCompositeFormula=>
       wrapLeft(t, pp(q+0, t.left)) + op(t).opcode + wrapRight(t, pp(q+1, t.right))
-    case r: Refinement => pp(q+0, r.a) + " " + op(r) + pp(q+1, r.b)
-    case r: ProgramEquiv => pp(q+0, r.a) ++ " " + op(r) + pp(q+1, r.b)
+    case r: Refinement => pp(q+0, r.a) + " " + op(r).opcode + " " + pp(q+1, r.b)
+    case r: ProgramEquiv => "{" + pp(q+0, r.a) ++ "} " + op(r).opcode + " {" + pp(q+1, r.b) + "}"
   })
 
   private def pp(q: PosInExpr, program: Program): String = emit(q, program match {
@@ -211,6 +214,7 @@ class KeYmaeraXPrinter extends PrettyPrinter {
 
 /**
   * Fully-parenthesized pretty printer in full form with full parentheses.
+  *
   * @example
  * Fully parenthesized strings are obtained using the [[edu.cmu.cs.ls.keymaerax.parser.FullPrettyPrinter]] printer:
   * {{{
@@ -232,6 +236,7 @@ object FullPrettyPrinter extends KeYmaeraXPrinter {
 
 /**
   * KeYmaera X Printer base class formatting based on parentheses skipping decisions.
+  *
   * @author Andre Platzer
   */
 abstract class KeYmaeraXSkipPrinter extends KeYmaeraXPrinter {
@@ -254,6 +259,7 @@ abstract class KeYmaeraXSkipPrinter extends KeYmaeraXPrinter {
 
   /**
     * Whether parentheses around ``t.child`` can be skipped because they are implicit.
+    *
     * @see [[wrapChild()]]
     */
   protected def skipParens(t: UnaryComposite): Boolean
@@ -262,6 +268,7 @@ abstract class KeYmaeraXSkipPrinter extends KeYmaeraXPrinter {
 
   /**
     * Whether parentheses around ``t.left`` can be skipped because they are implicit.
+    *
     * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
     * @see [[wrapLeft()]]
     */
@@ -269,6 +276,7 @@ abstract class KeYmaeraXSkipPrinter extends KeYmaeraXPrinter {
 
   /**
     * Whether parentheses around ``t.right`` can be skipped because they are implicit.
+    *
     * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
     * @see [[wrapRight()]]
     */
@@ -280,7 +288,8 @@ abstract class KeYmaeraXSkipPrinter extends KeYmaeraXPrinter {
  * Precedence-based: KeYmaera X Pretty Printer formats differential dynamic logic expressions with compact brackets
  * in KeYmaera X notation according to the concrete syntax of differential dynamic logic
  * with explicit statement end ``;`` operator.
- * @author Andre Platzer
+  *
+  * @author Andre Platzer
  * @todo Augment with ensuring postconditions that check correct reparse non-recursively.
  * @see [[http://keymaeraX.org/doc/dL-grammar.md Grammar]]
  */
@@ -291,14 +300,16 @@ class KeYmaeraXPrecedencePrinter extends KeYmaeraXSkipPrinter {
 
   /**
    * Whether parentheses around ``t.left`` can be skipped because they are implied.
-   * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
+    *
+    * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
    */
   protected override def skipParensLeft(t: BinaryComposite): Boolean =
     op(t.left) < op(t) || op(t.left) <= op(t) && op(t).assoc == LeftAssociative && op(t.left).assoc == LeftAssociative
 
   /**
    * Whether parentheses around ``t.right`` can be skipped because they are implied.
-   * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
+    *
+    * @note Based on (seemingly redundant) inequality comparisons since equality incompatible with comparison ==
    */
   protected override def skipParensRight(t: BinaryComposite): Boolean =
     op(t.right) < op(t) || op(t.right) <= op(t) && op(t).assoc == RightAssociative && op(t.right).assoc == RightAssociative
@@ -309,6 +320,7 @@ class KeYmaeraXPrecedencePrinter extends KeYmaeraXSkipPrinter {
   * Weighted precedence-based: KeYmaera X Pretty Printer formats differential dynamic logic expressions with compact brackets
   * in KeYmaera X notation according and extra space weighted according to the concrete syntax of differential dynamic logic
   * with explicit statement end ``;`` operator.
+  *
   * @author Andre Platzer
   * @see [[http://keymaeraX.org/doc/dL-grammar.md Grammar]]
   */
