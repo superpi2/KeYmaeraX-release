@@ -612,4 +612,5 @@ object DifferentialProduct {
 }
 
 
-sealed case class Refinement(a: Program, b: Program) extends Expression with Formula
+sealed case class Refinement(a: Program, b: Program) extends Formula
+sealed case class ProgramEquiv(a: Program, b: Program) extends Formula

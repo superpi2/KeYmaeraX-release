@@ -204,6 +204,7 @@ object StaticSemantics {
 
     //refinements
     case Refinement(a,b) => VCF(fv = freeVars(a) ++ freeVars(b), bv = boundVars(a) ++ boundVars(b)) //@todo not as sure about this one.
+    case ProgramEquiv(a,b) => VCF(fv = freeVars(a) ++ freeVars(b), bv = boundVars(a) ++ boundVars(b)) //@todo not as sure about this one.
 
     // special cases
     //@note DifferentialFormula in analogy to Differential
@@ -330,6 +331,7 @@ object StaticSemantics {
     case DifferentialFormula(g) => signature(g)
 
     case Refinement(a,b) => signature(a) ++ signature(b) //@todo should be ok, but review
+    case ProgramEquiv(a,b) => signature(a) ++ signature(b) //@todo should be ok, but review
   }
 
   /**
