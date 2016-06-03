@@ -536,5 +536,16 @@ End.
 Axiom "const formula congruence".
   (s() = t()) -> (ctxF_(s()) <-> ctxF_(t()))
 End.
+
+/** dRL axioms corresponding to proof rules.
+ * @see http://reports-archive.adm.cs.cmu.edu/anon/2015/CMU-CS-15-144.pdf @todo properly cite
+ */
+Axiom "refine choice comm".
+  {a; ++ b;} ~~ {b; ++ a;}
+End.
+
+Axiom "refine id".
+  a; <~ a;
+End.
 """
 }
