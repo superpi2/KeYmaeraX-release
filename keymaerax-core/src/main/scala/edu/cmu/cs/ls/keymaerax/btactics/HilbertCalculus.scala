@@ -93,7 +93,7 @@ trait HilbertCalculus extends UnifyUSCalculus {
     }
   }
 
-  private def namedUseAt(name: String, axiomName: String) = new DependentPositionTactic(name) {
+  def namedUseAt(name: String, axiomName: String) = new DependentPositionTactic(name) {
     assert(DerivationInfo.hasCodeName(name), s"${name} is a tactic name but is not a DerivationInfo codeName.")
     override def factory(pos: Position): DependentTactic = useAt(axiomName)(pos)
   }
