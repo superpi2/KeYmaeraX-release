@@ -612,8 +612,4 @@ object DifferentialProduct {
 }
 
 
-sealed case class Refinement(a: Program, b: Program) extends Expression {
-  override def kind: Kind = RefinementKind
-
-  override def sort: Sort = Bool
-}
+sealed case class Refinement(a: Program, b: Program) extends Expression with Formula

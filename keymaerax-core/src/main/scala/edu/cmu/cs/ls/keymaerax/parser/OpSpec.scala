@@ -223,6 +223,11 @@ object OpSpec {
   //valp: Compose     => OpNotation("",    230, RightAssociative)
   val sChoice       = BinaryOpSpec[Program](CHOICE,   250, RightAssociative, binprog, Choice.apply _)
 
+  val sRefines = BinaryOpSpec[Expression](REFINES, 2, RightAssociative, binprog, (p:Expression, q:Expression) => (p,q) match {
+    case (p:Program, q:Program) => Refinement.apply(p,q)
+    case _ => ???
+  })
+
   /** Parser needs a lookahead operator when actually already done, so don't dare constructing it */
   val sEOF          = UnitOpSpec  (EOF, Int.MaxValue, _ => throw new AssertionError("Cannot construct EOF"))
   /** Parser needs a lookahead operator when actually already done, so don't dare constructing it */
@@ -273,6 +278,7 @@ object OpSpec {
     case f: Or           => sOr
     case f: Imply        => sImply
     case f: Equiv        => sEquiv
+    case r: Refinement   => sRefines
 
     // programs
     case p: ProgramConst => sProgramConst

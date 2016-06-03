@@ -202,6 +202,9 @@ object StaticSemantics {
       val vg = fmlVars(g)
       VCF(fv = vp.fv ++ (vg.fv -- vp.mbv), bv = vp.bv ++ vg.bv)
 
+    //refinements
+    case Refinement(a,b) => VCF(fv = freeVars(a) ++ freeVars(b), bv = boundVars(a) ++ boundVars(b)) //@todo not as sure about this one.
+
     // special cases
     //@note DifferentialFormula in analogy to Differential
     case DifferentialFormula(df) =>
@@ -325,6 +328,8 @@ object StaticSemantics {
     case Diamond(p, g) => signature(p) ++ signature(g)
 
     case DifferentialFormula(g) => signature(g)
+
+    case Refinement(a,b) => signature(a) ++ signature(b) //@todo should be ok, but review
   }
 
   /**

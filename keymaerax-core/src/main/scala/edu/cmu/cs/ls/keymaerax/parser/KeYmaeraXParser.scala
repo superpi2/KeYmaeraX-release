@@ -12,7 +12,6 @@ package edu.cmu.cs.ls.keymaerax.parser
 
 import scala.annotation.{switch, tailrec}
 import scala.collection.immutable._
-
 import edu.cmu.cs.ls.keymaerax.core._
 
 /**
@@ -129,8 +128,10 @@ object KeYmaeraXParser extends Parser {
     private[parser] def location: Location = input.head.loc
     /** Lookahead token of this parser state */
     private[parser] def la: Token = input.head
-    override def toString: String = "ParseState(" + stack + "  <|>  " + input.mkString(", ") +")"
-    /** Explanation of the top few items on the parser stack */
+
+    override def toString: String = "ParseState(stack: " + stack + "  <|> input stream: " + input.mkString(", ") +")"
+    /** Explanation of the top few items on the parser stack
+      * @todo Recosider this name -- blah.to... autocompletes to topString instead of toString, which is annoying. */
     def topString: String = stack.take(5).fold("")((s, e) => s + " " + e)
   }
 
@@ -292,6 +293,11 @@ object KeYmaeraXParser extends Parser {
     val ParseState(s, input@(Token(la,_) :: rest)) = st
     //@note This table of LR Parser matches needs an entry for every prefix substring of the grammar.
     s match {
+      case r :+ Expr(p:Program) :+ Token(REFINES, _) =>
+        shift(st)
+      case r :+ Expr(p:Program) :+ Token(REFINES, _) :+ Expr(q:Program) =>
+        reduce(st, 3, Expr(Refinement(p, q)), r)
+
       // nonproductive: help KeYmaeraXLexer recognize := * with whitespaces as ASSIGNANY
       case r :+ Token(ASSIGN,loc1) :+ Token(STAR,loc2) =>
         reduce(st, 2, Bottom :+ Token(ASSIGNANY, loc1--loc2), r)
@@ -307,7 +313,6 @@ object KeYmaeraXParser extends Parser {
       case r :+ Expr(p:Program) :+ Token(INVARIANT,_) =>
         if (isAnnotable(p)) if (la == LPAREN) shift(st) else error(st, List(LPAREN))
         else errormsg(st, "requires an operator that supports annotation")
-
 
       // special quantifier notation
       case r :+ (tok1@Token(FORALL,_)) :+ RecognizedQuant(v1:Variable) :+ Expr(f1:Formula) =>
@@ -657,10 +662,11 @@ object KeYmaeraXParser extends Parser {
         else error(st, List(FOLLOWSEXPRESSION))
 
       // small stack cases
-      case Bottom :+ Expr(t) =>
-        if (la == EOF) accept(st, t)
-        else if (followsExpression(t, la) && la!=EOF) shift(st)
+      case Bottom :+ Expr(t) => {
+        if(la == EOF) accept(st, t)
+        else if(followsExpression(t, la) && la!=EOF) shift(st)
         else error(st, List(EOF, FOLLOWSEXPRESSION))
+      }
 
       case Bottom =>
         if (firstExpression(la)) shift(st)
@@ -784,7 +790,8 @@ object KeYmaeraXParser extends Parser {
     la==COMMA || la==AMP ||  // from D in differential programs
     la==EOF ||
     la==DUAL ||              // from P in hybrid games
-    la==INVARIANT            // extra: additional @annotations
+    la==INVARIANT ||            // extra: additional @annotations
+    la==REFINES
 
   /** Follow(kind(expr)): Can la follow an expression of the kind of expr? */
   private def followsExpression(expr: Expression, la: Terminal): Boolean = expr match {
@@ -795,6 +802,7 @@ object KeYmaeraXParser extends Parser {
     case And(Equal(_:DifferentialSymbol, _), _) => followsFormula(la) || /*if elaborated to ODE*/ followsProgram(la)
     case Equal(_:DifferentialSymbol, _) => followsFormula(la) || /*if elaborated to ODE*/ followsProgram(la)
     case f: Formula => followsFormula(la) || elaboratable(TermKind, f)!=None && followsTerm(la)
+    case r: Refinement => true
     case _: Program => followsProgram(la)
     case _ => ???
   }
@@ -974,6 +982,8 @@ object KeYmaeraXParser extends Parser {
       // programs
       //case p: ProgramConst => sProgramConst
       //case p: DifferentialProgramConst => sDifferentialProgramConst
+      case sRefines.op => sRefines
+
       case sAssign.op => if (isDifferentialAssign(st)) sDiffAssign else sAssign
       case sAssignAny.op => sAssignAny
       case sTest.op => sTest
@@ -984,7 +994,6 @@ object KeYmaeraXParser extends Parser {
       case sDual.op => sDual
       case sCompose.op => sCompose
       case sChoice.op => sChoice
-
 
       case INVARIANT => sNone
       //case
