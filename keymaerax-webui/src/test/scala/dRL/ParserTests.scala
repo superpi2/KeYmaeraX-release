@@ -32,7 +32,7 @@ class ParserTests extends FlatSpec with Matchers {
 
 
   it should "load axioms file, whcih contains many uses of both <~ and ~~" in {
-    Provable.axiom
+    Provable.axiom //@todo not sure this does what I think it does...
   }
 
   //@todo x:=1; <~ x:=2; & 1=1 does not parse probably due to precedence issues.
