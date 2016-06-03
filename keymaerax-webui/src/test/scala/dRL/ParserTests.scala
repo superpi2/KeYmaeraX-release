@@ -5,7 +5,7 @@
 
 package dRL
 
-import edu.cmu.cs.ls.keymaerax.core.{And, ProgramEquiv, Provable, Refinement}
+import edu.cmu.cs.ls.keymaerax.core._
 import edu.cmu.cs.ls.keymaerax.parser.KeYmaeraXParser
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
 import org.scalatest.{FlatSpec, Matchers}
@@ -29,11 +29,15 @@ class ParserTests extends FlatSpec with Matchers {
     KeYmaeraXParser(input) shouldBe ProgramEquiv("x:=1;".asProgram, "x:=2;".asProgram)
   }
 
-
+  it should "parse [<~] axiom" in {
+    val input = "[a;]p(??) <- ( ([b;]p(??)) & (a; <~ b;) )"
+    KeYmaeraXParser(input) shouldBe Imply(And("[b;]p(??)".asFormula, "a; <~ b;".asFormula), "[a;]p(??)".asFormula)
+  }
 
   it should "load axioms file, whcih contains many uses of both <~ and ~~" in {
     Provable.axiom //@todo not sure this does what I think it does...
   }
+
 
   //@todo x:=1; <~ x:=2; & 1=1 does not parse probably due to precedence issues.
 }

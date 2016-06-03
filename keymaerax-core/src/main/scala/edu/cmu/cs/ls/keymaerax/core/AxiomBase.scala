@@ -547,5 +547,9 @@ End.
 Axiom "refine id".
   a; <~ a;
 End.
+
+Axiom "[<~]".
+  [a;]p(??) <- ( ([b;]p(??)) & (a; <~ b;) )
+End.
 """
 }
