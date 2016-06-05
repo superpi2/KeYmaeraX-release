@@ -38,6 +38,10 @@ class ParserTests extends FlatSpec with Matchers {
     Provable.axiom //@todo not sure this does what I think it does...
   }
 
+  it should "parse us of [<~] axiom" in {
+    val f = "([a:=1;]a=1) <-> (([a:=2;]a=1)&(a:=1; <~ a:=2;))".asFormula
+  }
+
 
   //@todo x:=1; <~ x:=2; & 1=1 does not parse probably due to precedence issues.
 }
