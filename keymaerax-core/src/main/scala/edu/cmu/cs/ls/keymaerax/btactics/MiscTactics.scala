@@ -184,7 +184,8 @@ object TacticFactory {
 
   /**
    * Creates named dependent tactics.
-   * @example{{{
+    *
+    * @example{{{
    *  "[:=] assign" by (pos => useAt("[:=] assign")(pos))
    * }}}
    * @param name The tactic name.
@@ -192,6 +193,14 @@ object TacticFactory {
   implicit class TacticForNameFactory(val name: String) {
     /** Creates a named tactic */
     def by(t: BelleExpr): BelleExpr = new NamedTactic(name, t)
+
+    /** Create a depent position tactic with input */
+    def by(input: Expression, t: (Provable, Position) => BelleExpr): DependentPositionWithAppliedInputTactic =
+      new DependentPositionWithAppliedInputTactic(name, input) {
+        override def factory(pos: Position): DependentTactic = new DependentTactic("") {
+          override def computeExpr(provable: Provable) = t(provable, pos)
+        }
+      }
 
     /** Creates a dependent position tactic without inspecting the formula at that position */
     def by(t: (Position => BelleExpr)): DependentPositionTactic = new DependentPositionTactic(name) {
