@@ -31,7 +31,7 @@ class RefinementCalculusTests extends TacticTestBase {
     result shouldBe 'proved
   }
 
-  "boxRefine" should "prove [x:=1;]p(x) by refinment to x:=1" in {withMathematica(implicit qeTool => {
+  "boxRefine" should "prove [x:=1;]p(x) by refinement to x:=1" in {withMathematica(implicit qeTool => {
     val formula = "[x := 1;]x=1".asFormula
     val tactic = RefinementCalculus.boxRefine("x := 1;".asProgram)(1) <(
       TactixLibrary.assignb('R) &  TactixLibrary.QE,
