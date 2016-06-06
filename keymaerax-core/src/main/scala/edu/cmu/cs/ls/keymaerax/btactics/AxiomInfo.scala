@@ -82,8 +82,7 @@ object DerivationInfo {
     new DerivedAxiomInfo("<:=> assign", "<:=>", "assignd", {case () => HilbertCalculus.assignd}),
     new DerivedAxiomInfo("<:=> assign equality", "<:=>", "assigndEquality", {case () => HilbertCalculus.useAt("<:=> assign equality")}),
     new CoreAxiomInfo("[:=] assign equality", "[:=]=", "assignbeq", {case () => HilbertCalculus.useAt("[:=] assign equality")}),
-    //new CoreAxiomInfo("[:=] assign exists", ("[:=]∃","[:=]exists"), "assignbexists", {case () => HilbertCalculus.useAt("[:=] assign exists") }),
-    new DerivedAxiomInfo("[:=] assign exists", ("[:=]∃","[:=]exists"), "assignbexists222", {case () => HilbertCalculus.useAt(DerivedAxioms.assignbImpliesExistsAxiom) }),
+    new DerivedAxiomInfo("[:=] assign exists", ("[:=]∃","[:=]exists"), "assignbexists", {case () => HilbertCalculus.useAt(DerivedAxioms.assignbImpliesExistsAxiom) }),
     new CoreAxiomInfo("[:=] assign equality exists", ("[:=]","[:=] assign exists"), "assignbequalityexists", {case () => HilbertCalculus.useAt("[:=] assign equality exists") }),
     //new DerivedAxiomInfo("[:=] assign equality exists", "[:=]", "assignbequalityexists", {case () => HilbertCalculus.useAt("[:=] assign equality exists") }),
     //@todo new DerivedAxiomInfo("<:=> assign equality", "<:=>=", "assigndeq", {case () => ???}),
@@ -358,6 +357,15 @@ object DerivationInfo {
     new DerivedAxiomInfo("> flip", ">F", "flipGreater", {case () => useAt(DerivedAxioms.flipGreater)}),
     new DerivedAxiomInfo("<", "<", "less", {case () => useAt(DerivedAxioms.less)}),
     new DerivedAxiomInfo(">", ">", "greater", {case () => useAt(DerivedAxioms.greater)}),
+
+    new DerivedAxiomInfo("!= elimination", ("≠", "!="), "notEqualElim", {case () => useAt(DerivedAxioms.notEqualElim)}),
+    new DerivedAxiomInfo(">= elimination", ("≥", ">="), "greaterEqualElim", {case () => useAt(DerivedAxioms.greaterEqualElim)}),
+    new DerivedAxiomInfo("> elimination", ">", "greaterElim", {case () => useAt(DerivedAxioms.greaterElim)}),
+    new DerivedAxiomInfo("1>0", "1>0", "oneGreaterZero", {case () => useAt(DerivedAxioms.oneGreaterZero)}),
+    new DerivedAxiomInfo("nonnegative squares", "^2>=0", "nonnegativeSquares", {case () => useAt(DerivedAxioms.nonnegativeSquares)}),
+    new DerivedAxiomInfo(">2!=", ">2!=", "greaterImpliesNotEqual", {case () => useAt(DerivedAxioms.greaterImpliesNotEqual)}),
+    new DerivedAxiomInfo("> monotone", ">mon", "greaterMonotone", {case () => useAt(DerivedAxioms.greaterMonotone)}),
+
     new DerivedAxiomInfo("abs", "abs", "abs", {case () => useAt(DerivedAxioms.absDef)}),
     new DerivedAxiomInfo("min", "min", "min", {case () => useAt(DerivedAxioms.minDef)}),
     new DerivedAxiomInfo("max", "max", "max", {case () => useAt(DerivedAxioms.maxDef)}),
@@ -411,45 +419,45 @@ object DerivationInfo {
     // Proof rule position PositionTactics
     new PositionTacticInfo("notL"
       , RuleDisplayInfo(("¬L", "!L"), (List("¬P", "&Gamma;"),List("&Delta;")), List((List("&Gamma;"),List("&Delta;","P"))))
-      , {case () => ProofRuleTactics.notL}),
+      , {case () => SequentCalculus.notL}),
     new PositionTacticInfo("notR"
       , RuleDisplayInfo(("¬R", "!R"), (List("&Gamma;"),List("¬P","&Delta;")), List((List("&Gamma;","P"),List("&Delta;"))))
-      , {case () => ProofRuleTactics.notR}),
+      , {case () => SequentCalculus.notR}),
     new PositionTacticInfo("andR"
       , RuleDisplayInfo(("∧R", "^R"), (List("&Gamma;"),List("P∧Q","&Delta;")),
         List((List("&Gamma;"),List("P", "&Delta;")),
           (List("&Gamma;"), List("Q", "&Delta;"))))
-      , {case () => ProofRuleTactics.andR}),
+      , {case () => SequentCalculus.andR}),
     new PositionTacticInfo("andL"
       , RuleDisplayInfo(("∧L", "^L"), (List("P∧Q", "&Gamma;"),List("&Delta;")), List((List("&Gamma;","P","Q"),List("&Delta;"))))
-      , {case () => ProofRuleTactics.andL}),
+      , {case () => SequentCalculus.andL}),
     new PositionTacticInfo("orL"
       , RuleDisplayInfo(("∨L", "|L"), (List("P∨Q", "&Gamma;"),List("&Delta;")),
         List((List("&Gamma;", "P"),List("&Delta;")),
           (List("&Gamma;", "Q"),List("&Delta;"))))
-      , {case () => ProofRuleTactics.orL}),
+      , {case () => SequentCalculus.orL}),
     new PositionTacticInfo("orR"
       , RuleDisplayInfo(("∨R", "|R"), (List("&Gamma;"),List("P∨Q","&Delta;")), List((List("&Gamma;"),List("P","Q","&Delta;"))))
-      , {case () => ProofRuleTactics.orR}),
+      , {case () => SequentCalculus.orR}),
     new PositionTacticInfo("implyR"
       , RuleDisplayInfo(("→R", "->R"), (List("&Gamma;"),List("P→Q", "&Delta;")), List((List("&Gamma;","P"),List("Q","&Delta;"))))
-      , {case () => ProofRuleTactics.implyR}),
+      , {case () => SequentCalculus.implyR}),
     new PositionTacticInfo("implyL"
       , RuleDisplayInfo(("→L", "->L"), (List("P→Q","&Gamma;"),List("&Delta;")),
         List((List("&Gamma;","P"),List("&Delta;")),
           (List("&Gamma;"),List("Q","&Delta;"))))
-      , {case () => ProofRuleTactics.implyL}),
+      , {case () => SequentCalculus.implyL}),
     new PositionTacticInfo("equivL"
       , RuleDisplayInfo(("↔L", "<->L"), (List("P↔Q","&Gamma;"),List("&Delta;")),
         List((List("&Gamma;","P∧Q"),List("&Delta;")),
           (List("&Gamma;","¬P∧¬Q"),List("&Delta;"))
          ))
-      , {case () => ProofRuleTactics.equivL}),
+      , {case () => SequentCalculus.equivL}),
     new PositionTacticInfo("equivR"
       , RuleDisplayInfo(("↔R", "<->R"), (List("&Gamma;"),List("P↔Q","&Delta;")),
         List((List("&Gamma;","P","Q"),List("&Delta;")),
           (List("&Gamma;","¬P","¬Q"),List("&Delta;"))))
-      , {case () => ProofRuleTactics.equivR}),
+      , {case () => SequentCalculus.equivR}),
     new InputPositionTacticInfo("allL"
       , RuleDisplayInfo(("∀L", "allL"), (List("&Gamma;","∀x P(x)"), List("&Delta;")),
         List((List("&Gamma;", "P(θ)"),List("&Delta;"))))
@@ -482,20 +490,20 @@ object DerivationInfo {
         List())
       , {case () => HilbertCalculus.dualFree}),
 
-    new PositionTacticInfo("commuteEquivL", ("↔CL", "<->CL"), {case () => ProofRuleTactics.commuteEquivL}),
-    new PositionTacticInfo("commuteEquivR", ("↔CR", "<->CR"), {case () => ProofRuleTactics.commuteEquivR}),
-    new PositionTacticInfo("equivifyR", ("→↔","-><->"), {case () => ProofRuleTactics.equivifyR}),
+    new PositionTacticInfo("commuteEquivL", ("↔CL", "<->CL"), {case () => SequentCalculus.commuteEquivL}),
+    new PositionTacticInfo("commuteEquivR", ("↔CR", "<->CR"), {case () => SequentCalculus.commuteEquivR}),
+    new PositionTacticInfo("equivifyR", ("→↔","-><->"), {case () => SequentCalculus.equivifyR}),
     new PositionTacticInfo("hideL"
       , RuleDisplayInfo("WL", (List("&Gamma;", "P"),List("&Delta;"))
         , List((List("&Gamma;"),List("&Delta;")))),
-      {case () => ProofRuleTactics.hideL}),
+      {case () => SequentCalculus.hideL}),
     new PositionTacticInfo("hideR"
       , RuleDisplayInfo("WR", (List("&Gamma;"),List("P", "&Delta;"))
         , List((List("&Gamma;"),List("&Delta;")))),
-      {case () => ProofRuleTactics.hideR}),
+      {case () => SequentCalculus.hideR}),
     new TacticInfo("smartHide", "smartHide", {case () => ArithmeticSimplification.smartHide}),
-    new PositionTacticInfo("coHideL", "W", {case () => ProofRuleTactics.coHideL}),
-    new PositionTacticInfo("coHideR", "W", {case () => ProofRuleTactics.coHideR}),
+    new PositionTacticInfo("coHideL", "W", {case () => SequentCalculus.cohideL}),
+    new PositionTacticInfo("coHideR", "W", {case () => SequentCalculus.cohideR}),
     new PositionTacticInfo("closeFalse"
       , RuleDisplayInfo(("⊥L", "falseL"), (List("⊥","&Gamma;"),List("&Delta;")), List())
       , {case () => ProofRuleTactics.closeFalse}),
@@ -505,14 +513,14 @@ object DerivationInfo {
     new PositionTacticInfo("skolemizeL", "skolem", {case () => ProofRuleTactics.skolemizeL}),
     new PositionTacticInfo("skolemizeR", "skolem", {case () => ProofRuleTactics.skolemizeR}),
     new PositionTacticInfo("skolemize", "skolem", {case () => ProofRuleTactics.skolemize}),
-    new PositionTacticInfo("coHide", "W", {case () => ProofRuleTactics.coHide}),
-    new PositionTacticInfo("hide", "W", {case () => ProofRuleTactics.hide}),
+    new PositionTacticInfo("coHide", "W", {case () => SequentCalculus.cohide}),
+    new PositionTacticInfo("hide", "W", {case () => SequentCalculus.hide}),
     new PositionTacticInfo("allL2R", "L=R all", {case () => TactixLibrary.exhaustiveEqL2R}),
 
     // Proof rule two-position tactics
-    new TwoPositionTacticInfo("coHide2", "W", {case () => ProofRuleTactics.coHide2}),
-    new TwoPositionTacticInfo("exchangeL", "X", {case () => ProofRuleTactics.exchangeL}),
-    new TwoPositionTacticInfo("exchangeR", "X", {case () => ProofRuleTactics.exchangeR}),
+    new TwoPositionTacticInfo("coHide2", "W", {case () => SequentCalculus.cohide2}),
+//    new TwoPositionTacticInfo("exchangeL", "X", {case () => ProofRuleTactics.exchangeL}),
+//    new TwoPositionTacticInfo("exchangeR", "X", {case () => ProofRuleTactics.exchangeR}),
     new TwoPositionTacticInfo("closeId",
       RuleDisplayInfo("closeId", (List("&Gamma;", "P"), List("P", "&Delta;")), Nil),
       {case () => (ante: AntePosition, succ: SuccPosition) => TactixLibrary.close(ante.top, succ.top)}),

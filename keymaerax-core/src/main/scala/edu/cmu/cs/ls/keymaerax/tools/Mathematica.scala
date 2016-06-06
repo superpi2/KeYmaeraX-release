@@ -2,6 +2,9 @@
 * Copyright (c) Carnegie Mellon University.
 * See LICENSE.txt for the conditions of this license.
 */
+/**
+  * @note Code Review: 2016-06-01
+  */
 package edu.cmu.cs.ls.keymaerax.tools
 
 import edu.cmu.cs.ls.keymaerax.core._
@@ -13,6 +16,7 @@ import scala.collection.immutable.Map
  *
  * Created by smitsch on 4/27/15.
  * @author Stefan Mitsch
+ * @todo Code Review: Move non-critical tool implementations into a separate package tactictools
  */
 class Mathematica extends ToolBase("Mathematica") with QETool with DiffSolutionTool with CounterExampleTool with SimulationTool with DerivativeTool {
   private val jlink = new JLinkMathematicaLink

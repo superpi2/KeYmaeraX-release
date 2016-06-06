@@ -2,6 +2,9 @@
  * Copyright (c) Carnegie Mellon University. CONFIDENTIAL
  * See LICENSE.txt for the conditions of this license.
  */
+/**
+  * @note Code Review: 2016-06-01
+  */
 package edu.cmu.cs.ls.keymaerax.tools
 
 // favoring immutable Seqs
@@ -25,6 +28,7 @@ import scala.math.BigDecimal
 private object MathematicaNameConversion {
   private val PREFIX = "KeYmaera`"
   private val SEP    = "$beginIndex$"
+  //@todo Code Review: disallow $ in names
   private val MUNDERSCORE = "$underscore$" //Mathematica Underscore
 
   val CONST_FN_PREFIX: String = "constfn$"
@@ -49,6 +53,7 @@ private object MathematicaNameConversion {
     //   KeYmaera + name
     val identifier : String = ns match {
       //@note special function
+      //@todo Code Review: handle interpreted functions properly, handle name conflicts
       case Function("abs",None,Real,Real) => "Abs"
       case Function("Abs",None,Real,Real) => throw new IllegalArgumentException("Refuse translating Abs to Mathematica to avoid confusion with abs")
       case Function("min",None,Tuple(Real,Real),Real) => "Min"
@@ -81,6 +86,7 @@ private object MathematicaNameConversion {
 
   private def unmaskName(e: com.wolfram.jlink.Expr): (String, Option[Int]) = {
     val maskedName = e.asString().replaceAll(regexOf(MUNDERSCORE), "_")
+    //@todo Code Review: contains --> startsWith, improve readability/prefix+sep handling in a single name
     if (maskedName.contains(PREFIX) && maskedName.contains(SEP)) {
       //Get the parts of the masked name.
       val parts = maskedName.replace(PREFIX, "").split(regexOf(SEP))
