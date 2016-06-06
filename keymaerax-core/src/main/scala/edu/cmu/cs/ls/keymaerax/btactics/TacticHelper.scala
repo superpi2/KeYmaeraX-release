@@ -5,9 +5,15 @@
 package edu.cmu.cs.ls.keymaerax.btactics
 
 import edu.cmu.cs.ls.keymaerax.core._
-import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
+import edu.cmu.cs.ls.keymaerax.bellerophon.{PosInExpr, Position, SuccPosition}
 
 object TacticHelper {
+  /** @todo generalize to findInEverything and allow for subpositions. Return a Position instead of an index0 */
+  def findInSuccedent(formula: Formula, sequent: Sequent): Option[Position] =
+    sequent.succ.zipWithIndex.filter(_._1 == formula).headOption match {
+      case Some(x) => Some(SuccPosition(SuccPos(x._2)))
+      case None    => None
+    }
 
   def freshIndexInFormula(name: String, f: Formula) =
     if (symbols(f).exists(_.name == name)) {
