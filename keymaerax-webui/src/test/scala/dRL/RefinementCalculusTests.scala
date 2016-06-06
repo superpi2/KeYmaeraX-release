@@ -5,15 +5,14 @@
 
 package dRL
 
-import edu.cmu.cs.ls.keymaerax.btactics.{HilbertCalculus, RefinementCalculus, TacticTestBase}
+import edu.cmu.cs.ls.keymaerax.btactics._
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._ // adds .asFormula, .asProgram, .asTerm methods to String class.
 
 /**
-  * Tests the idempotent semiring proof rules/axioms.
-  *
+  * Most basic tests for some tactics in the btactics.dRL namespace.
   * @author Nathan Fulton
   */
-class IdempotentSemiRingTests extends TacticTestBase {
+class RefinementCalculusTests extends TacticTestBase {
   "refine choice comm axiom" should "prove itself" in {withMathematica(implicit qeTool => {
     val formula = "{a; ++ b;} ~~ {b; ++ a;}".asFormula
     val result = proveBy(formula, RefinementCalculus.refineChoiceComm)
@@ -24,5 +23,22 @@ class IdempotentSemiRingTests extends TacticTestBase {
     val formula = "{x:=1; ++ x:=2;} ~~ {x:=2; ++ x:=1;}".asFormula
     val result = proveBy(formula, RefinementCalculus.refineChoiceComm)
     result shouldBe 'proved //same as result.isProved shouldBe true
+  })}
+
+  "refineId" should "prove x:=1; <~ x:=1;" in {
+    val formula = "{x:=1;} <~ {x:=1;}".asFormula
+    val result = proveBy(formula, RefinementCalculus.refineId)
+    result shouldBe 'proved
+  }
+
+  "boxRefine" should "prove [x:=1;]p(x) by refinment to x:=1" in {withMathematica(implicit qeTool => {
+    val formula = "[x := 1;]x=1".asFormula
+    val tactic = RefinementCalculus.boxRefine("x := 1;".asProgram)(1) <(
+      TactixLibrary.assignb('R) &  TactixLibrary.QE,
+      RefinementCalculus.refineId
+    )
+
+    val result = proveBy(formula, tactic)
+    result shouldBe 'proved
   })}
 }
