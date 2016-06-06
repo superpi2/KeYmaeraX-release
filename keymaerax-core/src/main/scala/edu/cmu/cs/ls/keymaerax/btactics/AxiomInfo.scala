@@ -653,7 +653,8 @@ object DerivationInfo {
       , "CTtermCongruence", {case () => HilbertCalculus.useAt(DerivedAxioms.CTtermCongruence)}),
 
     new CoreAxiomInfo("refine choice comm", ("≤∪ comm", "refineChoiceComm"), "refineChoiceComm", {case () => RefinementCalculus.refineChoiceComm}),
-    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.boxRefineAxiom})
+    new CoreAxiomInfo("refine id", ("≤ identity", "refineId"), "refineId", {case () => RefinementCalculus.refineId}),
+    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.boxRefineAxiom}) //@todo add boxRefine w/ arg.
   ) ensuring(consistentInfo _, "meta-information on AxiomInfo is consistent with actual (derived) axioms etc.")
 
   private def consistentInfo(list: List[DerivationInfo]): Boolean = {
