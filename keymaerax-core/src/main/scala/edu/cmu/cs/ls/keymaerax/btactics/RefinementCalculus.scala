@@ -75,6 +75,14 @@ object RefinementCalculus {
   /**
     * Proves
     * {{{
+    *   a; <~ a;
+    * }}}
+    */
+  lazy val refineId : BelleExpr = "refineId" by HilbertCalculus.byUS("refine id")
+
+  /**
+    * Proves
+    * {{{
     *   {a; ++ b;} ~~ {b; ++ a;}
     * }}}
     */
@@ -95,15 +103,26 @@ object RefinementCalculus {
     * ---------------- implyL
     *    p->q |- p
     * }}}
+    *
     * @todo Hide only p in the produced subgoal (|- p,q). Requires turning this into a dependent tactic and finding the
     *       position of the assumption in the succedent.
     */
-  private lazy val implicationRewriting = "implicationRewriting" by ((pos: Position) =>
+  private lazy val implicationRewriting = "implicationRewriting" by ((pos: Position, sequent: Sequent) => {
+    assert(pos.isAnte)
+
+    val Imply(left,right) = sequent.ante(pos.index0) //the implication
+    val implicantPos     = TacticHelper.findInSuccedent(right, sequent).getOrElse(
+        throw new Exception(s"Expected to find ${right} in the succedent of ${sequent.prettyString}"))
+
     PartialTactic(TactixLibrary.implyL(pos) <(
-      Idioms.nil, //@todo hide the original assumption.
+      PartialTactic(
+        DebuggingTactics.assert(s => s.succ(implicantPos.index0) == right, s"Expected implicand at position ${implicantPos}") &
+        DebuggingTactics.assert(s => s.succ.length >= 2, "Expected succ length >= 2") &
+        TactixLibrary.hideR(implicantPos)
+      ),
       TactixLibrary.close
       ))
-    )
+  })
 
   //endregion
 
