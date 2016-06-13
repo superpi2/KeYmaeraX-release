@@ -614,3 +614,8 @@ object DifferentialProduct {
 
 sealed case class Refinement(a: Program, b: Program) extends Formula
 sealed case class ProgramEquiv(a: Program, b: Program) extends Formula
+
+/** @todo need a better name that goes along with funcof and predicationalof... */
+sealed case class ProgramPredicateOf(f: Function, a: Program) extends Formula {
+  assert(f.domain == Trafo, "Function applied to ProgOf should have domain Trafo.")
+}
