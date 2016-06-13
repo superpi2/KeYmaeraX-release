@@ -387,6 +387,11 @@ object KeYmaeraXParser extends Parser {
         if (followsFormula(la)) reduce(st, 4, PredicationalOf(Function(name, idx, Bool, Bool), elaborate(st, optok, OpSpec.sPredOf, FormulaKind, f1).asInstanceOf[Formula]), r)
         else error(st, List(FOLLOWSFORMULA))
 
+      // program predicational symbols
+      case r :+ Token(IDENT(name,idx),_) :+ (optok@Token(LBRACE,_)) :+ Expr(p:Program) :+ Token(RBRACE,_) =>
+        if (followsFormula(la)) reduce(st, 4, ProgramPredicateOf(Function(name, idx, Trafo, Bool), p), r)
+        else error(st, List(FOLLOWSFORMULA))
+
       case r :+ Token(tok:IDENT,_) :+ Token(LPAREN,_) =>
         assert(isNoQuantifier(r), "Quantifier stack items handled above")
         if (firstTerm(la) || firstFormula(la) || la==RPAREN || la==ANYTHING) shift(st) else error(st, List(FIRSTTERM,FIRSTFORMULA,RPAREN,ANYTHING))

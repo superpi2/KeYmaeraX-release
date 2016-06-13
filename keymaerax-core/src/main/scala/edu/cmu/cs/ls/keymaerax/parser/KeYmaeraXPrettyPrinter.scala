@@ -237,6 +237,8 @@ class KeYmaeraXPrinter extends BasePrettyPrinter {
     case True|False|DotFormula  => op(formula).opcode
     case PredOf(p, c)           => p.asString + "(" + pp(q+0, c) + ")"
     case PredicationalOf(p, c)  => p.asString + "{" + pp(q+0, c) + "}"
+    case ProgramPredicateOf(f,p) => f.asString + "{" + pp(q+0, p) + "}" //@todo do we need yet another set of wrappers?
+
     // special case to disambiguate between x<-y as in x < -y compared to x REVIMPLY y
     case f: Less                => wrapLeft(f, pp(q+0, f.left)) + LEXSPACE + op(formula).opcode + LEXSPACE + wrapRight(f, pp(q+1, f.right))
     case f: ComparisonFormula   => wrapLeft(f, pp(q+0, f.left)) + op(formula).opcode + wrapRight(f, pp(q+1, f.right))

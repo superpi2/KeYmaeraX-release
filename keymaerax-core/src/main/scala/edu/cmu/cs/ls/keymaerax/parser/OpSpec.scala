@@ -11,7 +11,6 @@
 package edu.cmu.cs.ls.keymaerax.parser
 
 import scala.collection.immutable._
-
 import edu.cmu.cs.ls.keymaerax.core._
 import edu.cmu.cs.ls.keymaerax.core.Number
 
@@ -176,6 +175,8 @@ object OpSpec {
   val sFalse        = UnitOpSpec(FALSE,                 0, False)
   val sPredOf       = UnaryOpSpec(none,                 0, PrefixFormat, untermfml, (name, e:Expression) => PredOf(Function(name, None, Real, Bool), e.asInstanceOf[Term]))
   val sPredicationalOf = UnaryOpSpec(none,              0, PrefixFormat, unfml, (name, e:Formula) => PredicationalOf(Function(name, None, Bool, Bool), e.asInstanceOf[Formula]))
+  val sProgramPredicateOf = UnaryOpSpec(none,      0, PrefixFormat, unfml, (name, e:Expression) => ProgramPredicateOf(Function(name, None, Trafo, Bool), e.asInstanceOf[Program]).asInstanceOf[Expression])
+
   val sDifferentialFormula = UnaryOpSpec[Formula](PRIME,80, PostfixFormat, unfml, DifferentialFormula.apply _)
   val sEqual        = lBinaryOpSpec(EQ,                90, AtomicBinaryFormat, bintermfml, Equal.apply _)
   assert(sEqual>sMinus, "formulas bind weaker than their constituent terms")
@@ -267,6 +268,7 @@ object OpSpec {
     case False           => sFalse
     case f: PredOf       => sPredOf
     case f: PredicationalOf => sPredicationalOf
+    case f: ProgramPredicateOf => sProgramPredicateOf
     case f: DifferentialFormula => sDifferentialFormula
     case f: Equal        => sEqual
     case f: NotEqual     => sNotEqual
