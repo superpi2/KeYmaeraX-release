@@ -5,6 +5,7 @@
 
 package dRL
 
+import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
 import edu.cmu.cs.ls.keymaerax.btactics._
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._ // adds .asFormula, .asProgram, .asTerm methods to String class.
 
@@ -38,6 +39,16 @@ class RefinementCalculusTests extends TacticTestBase {
       RefinementCalculus.refineId
     )
 
+    val result = proveBy(formula, tactic)
+    result shouldBe 'proved
+  })}
+
+  "CP" should "prove [x:=1; ++ x:=2;]p(??) <-> [x := 2; ++ x:=1;]p(??) by refinement then revineId" in {withMathematica(implicit qeTool => {
+    val formula = "[{x:=1; ++ x:=2;}]p(??) <-> [{x:=2; ++ x:=1;}]p(??)".asFormula
+    import Augmentors._
+    formula.at(PosInExpr(0 :: 0 :: Nil))._2 shouldBe "{x:=1; ++ x:=2;}".asProgram
+
+    val tactic = RefinementCalculus.CP(PosInExpr(0 :: Nil)) & RefinementCalculus.refineChoiceComm
     val result = proveBy(formula, tactic)
     result shouldBe 'proved
   })}
