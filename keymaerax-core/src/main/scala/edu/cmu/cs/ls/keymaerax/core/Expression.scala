@@ -615,7 +615,16 @@ object DifferentialProduct {
 sealed case class Refinement(a: Program, b: Program) extends Formula
 sealed case class ProgramEquiv(a: Program, b: Program) extends Formula
 
-/** @todo need a better name that goes along with funcof and predicationalof... */
-sealed case class ProgramPredicateOf(f: Function, a: Program) extends Formula {
+/**
+  * @todo is ApplicationOf enough? Do we also need this?
+  * @todo need a better name that goes along with funcof and predicationalof... */
+sealed case class ProgramPredicateOf(f: Function, a: Program) extends Formula with ApplicationOf {
   assert(f.domain == Trafo, "Function applied to ProgOf should have domain Trafo.")
+  override def func: Function = f
+  override def child: Expression = a
 }
+
+/** Placeholder for programs. Reserved predicational symbol _ for substitutions are unlike ordinary predicational symbols */
+object DotProgram extends ProgramConst("DotProgram")
+/** Placeholder for differential programs. Reserved predicational symbol _ for substitutions are unlike ordinary predicational symbols */
+object DotDiffProgram extends DifferentialProgramConst("DotDiffProgram")
