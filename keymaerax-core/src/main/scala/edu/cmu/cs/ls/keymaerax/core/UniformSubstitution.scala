@@ -72,6 +72,8 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
         StaticSemantics.freeVars(repl)
       // predicationals are not function nor predicate symbols
       case PredicationalOf(ctx: Function, DotFormula) => bottom
+      //Preogram predicates are not function nor predicate symbols???
+      case ProgramPredicateOf(ctx: Function, DotProgram) => bottom
       // DotFormula is a nullary Predicational
       case DotFormula => bottom
       case _: Formula => StaticSemantics.freeVars(repl)
@@ -116,6 +118,7 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     case a: ProgramConst             => a
     case DotFormula                  => DotFormula
     case PredicationalOf(p: Function, DotFormula) => p
+    case ProgramPredicateOf(f: Function, DotProgram) => f
     case _ => throw new CoreException("Nonsubstitutable expression " + this)
   }
 
@@ -133,6 +136,10 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     case PredicationalOf(lf, arg) =>
       assert(arg match { case DotFormula => true case _ => false }, "Only DotFormula allowed as argument")
       other match { case PredicationalOf(rf, _) => lf == rf case _ => false }
+    case ProgramPredicateOf(lf,a) =>
+      assert(a match {case DotProgram => true case DotDiffProgram => true case _ => false}, "Only DotPrograms and DotDiffPrograms as argument")
+      other match {case ProgramPredicateOf(rf, _) => lf == rf case _ => false}
+    case _:ApplicationOf => assert(false, "sameHead should include cases for all ApplicationOf subclasses, but missed one."); false
     case _ => assert(false, "sameHead only used for ApplicationOf"); false
   }
 
@@ -375,6 +382,7 @@ final case class USubst(subsDefsInput: immutable.Seq[SubstitutionPair]) extends 
         //@note Uniform substitution of the argument placeholder applied to the replacement subs.repl for the shape subs.what
         USubst(SubstitutionPair(wArg, usubst(theta)) :: Nil).usubst(subs.repl.asInstanceOf[Formula])
       case app@PredOf(q, theta) if !matchHead(app) => PredOf(q, usubst(theta))
+
       case app@PredicationalOf(op, fml) if matchHead(app) =>
         requireAdmissible(topVarsDiffVars[NamedSymbol](), fml, formula)
         val subs = uniqueElementOf[SubstitutionPair](subsDefs, sp => sp.what.isInstanceOf[PredicationalOf] && sp.sameHead(app))
@@ -385,6 +393,20 @@ final case class USubst(subsDefsInput: immutable.Seq[SubstitutionPair]) extends 
       case app@PredicationalOf(q, fml) if !matchHead(app) =>
         requireAdmissible(topVarsDiffVars[NamedSymbol](), fml, formula)
         PredicationalOf(q, usubst(fml))
+
+      case app@ProgramPredicateOf(op, program) if matchHead(app) => {
+        requireAdmissible(topVarsDiffVars[NamedSymbol](), program, formula)
+        val subs = uniqueElementOf[SubstitutionPair](subsDefs, sp => sp.what.isInstanceOf[ProgramPredicateOf] && sp.sameHead(app))
+        val ProgramPredicateOf(wp, wArg) = subs.what
+        assert(wp == op, "match only if same head")
+        assert(wArg == DotProgram)
+        USubst(SubstitutionPair(wArg, usubst(program)) :: Nil).usubst(subs.repl.asInstanceOf[Formula]) //@todo formula?
+      }
+      case app@ProgramPredicateOf(op, program) if !matchHead(app) => {
+        requireAdmissible(topVarsDiffVars[NamedSymbol](), program, formula)
+        ProgramPredicateOf(op, usubst(program))
+      }
+
       case DotFormula if  subsDefs.exists(_.what == DotFormula) =>
         subsDefs.find(_.what == DotFormula).get.repl.asInstanceOf[Formula]
       case DotFormula if !subsDefs.exists(_.what == DotFormula) => DotFormula

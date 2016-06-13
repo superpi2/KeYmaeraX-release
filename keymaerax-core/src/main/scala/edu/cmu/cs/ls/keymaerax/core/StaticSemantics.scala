@@ -176,6 +176,8 @@ object StaticSemantics {
 
     case PredOf(p, arg)     => VCF(fv = freeVars(arg), bv = bottom)
     case PredicationalOf(p, arg) => VCF(fv = topVarsDiffVars(), bv = topVarsDiffVars())
+    case ProgramPredicateOf(f, a) => VCF(fv = topVarsDiffVars(), bv = topVarsDiffVars())
+
     //@note DotFormula is like a reserved zero-parameter Predicational
     case DotFormula         => VCF(fv = topVarsDiffVars(), bv = topVarsDiffVars())
 
@@ -303,6 +305,8 @@ object StaticSemantics {
     case True | False => Set.empty
     case PredOf(p, arg) => Set(p) ++ signature(arg)
     case PredicationalOf(p, arg) => Set(p) ++ signature(arg)
+    case ProgramPredicateOf(f, a) => Set(f) ++ signature(a)
+
     case DotFormula => Set(DotFormula)
     //@note the following cases are equivalent to f.reapply-style but are left explicit to enforce revisiting this case when data structure changes.
     // case f:BinaryCompositeFormula => signature(f.left) ++ signature(f.right)
