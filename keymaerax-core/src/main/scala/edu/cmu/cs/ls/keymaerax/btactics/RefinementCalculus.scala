@@ -126,4 +126,10 @@ object RefinementCalculus {
 
   //endregion
 
+  //region Contextual rewriting @note maybe these should be moved into UnifyUSCalculus
+
+  def CP(inExpr: PosInExpr) = HilbertCalculus.CP(inExpr)
+
+  //endregion
+
 }

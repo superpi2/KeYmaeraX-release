@@ -48,7 +48,9 @@ private[core] object AxiomBase {
     val ctxf = Function("ctx_", None, Real, Bool) // predicate symbol
     // Sort of predicational is really (Real->Bool)->Bool except sort system doesn't know that type.
     val context = Function("ctx_", None, Bool, Bool) // predicational symbol
+    val programPredicateContext = Function("ctxp_", None, Trafo, Bool)
     val a = ProgramConst("a_")
+    val b = ProgramConst("b_")
 
     Map(
       /**
@@ -79,6 +81,16 @@ private[core] object AxiomBase {
       ("CE congruence",
         (immutable.IndexedSeq(Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(Equiv(pany, qany)))),
           Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(Equiv(PredicationalOf(context, pany), PredicationalOf(context, qany)))))),
+
+      /**
+        * Rule "CP program congruence"
+        * Premise a == b
+        * Conclusion ctxP_(a) <-> ctxP_(b)
+        */
+      ("CP program congruence",
+        (immutable.IndexedSeq(
+          Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(ProgramEquiv(a, b)))),
+          Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(Equiv(ProgramPredicateOf(programPredicateContext, a), ProgramPredicateOf(programPredicateContext, b)))) )),
       /**
        * Rule "<> monotone".
        * Premise p(??) ==> q(??)
