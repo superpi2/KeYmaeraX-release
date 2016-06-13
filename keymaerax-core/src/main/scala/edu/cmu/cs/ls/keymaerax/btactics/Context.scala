@@ -37,10 +37,6 @@ object Context {
   private val CROSSCHECK = false
   /** Whether to check split results redundantly */
   private val REDUNDANT = false
-  /** Placeholder for programs. Reserved predicational symbol _ for substitutions are unlike ordinary predicational symbols */
-  val DotProgram = ProgramConst("DotProgram")
-  /** Placeholder for differential programs. Reserved predicational symbol _ for substitutions are unlike ordinary predicational symbols */
-  val DotDiffProgram = DifferentialProgramConst("DotDiffProgram")
 
   /** Subexpression of `t` at the indicated position `pos` or exception if ill-defined position.
     * @ensures sub(t,pos) == at(t,pos)._2
@@ -502,8 +498,6 @@ object Context {
   * @author Andre Platzer
   */
 sealed trait Context[+T <: Expression] extends (Expression => Formula) {
-  import Context.{DotDiffProgram, DotProgram}
-
   /** the expression of type T representing this context. */
   def ctx: T
 
@@ -546,7 +540,6 @@ sealed trait Context[+T <: Expression] extends (Expression => Formula) {
   * @note ReplacementContexts that differ only in replacee are considered equal.
   */
 private class ReplacementContext[+T <: Expression](replicate: T, dot: PosInExpr) extends Context[T] {
-  import Context.{DotDiffProgram, DotProgram}
   private lazy val dotty = if (isFormulaContext) DotFormula else if (isTermContext) DotTerm else if (isProgramContext) DotProgram else DotDiffProgram
   def ctx: T = apply(dotty).asInstanceOf[T]
 
@@ -584,7 +577,6 @@ private class ReplacementContext[+T <: Expression](replicate: T, dot: PosInExpr)
   * @see [[USubst]]
   */
 private case class GuardedContext[+T <: Expression](ctx: T) extends Context[T] {
-  import Context.{DotDiffProgram, DotProgram}
   // either a term or a formula context, not both
   require(!(signature(ctx).contains(DotFormula) && signature(ctx).contains(DotTerm)), "Contexts are either DotFormula or DotTerm contexts, not both at once: " + ctx)
 
