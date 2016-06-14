@@ -36,8 +36,10 @@ object Augmentors {
     * Augment expressions with additional tactics-only helper functions.
     * @author Andre Platzer
     */
-//  implicit class ExpressionAugmentor(val expr: Expression) {
-//  }
+  implicit class ExpressionAugmentor(val expr: Expression) {
+    /** Construct a uniform substitution */
+    def ~>(repl: Expression) = SubstitutionPair(expr, repl)
+  }
 
   /**
    * Augment terms with additional tactics-only helper functions.
