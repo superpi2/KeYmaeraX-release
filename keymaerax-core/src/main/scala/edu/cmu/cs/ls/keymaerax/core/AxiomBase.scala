@@ -502,12 +502,12 @@ Axiom "refine id".
   a; =< a;
 End.
 
-/*Axiom "refine trans".
-  a; == g; <- (a; =< b; & b; =< g;)
-End.*/
-
 Axiom "refine antisym".
   a; == b; <- ( (a; =< b;) & (b; =< a;) )
+End.
+
+Axiom "refine unloop".
+  ({a;}* =< {b;}*) <- [{a;}*]({a;}* =< {b;}*)
 End.
 
 Axiom "[=<]".

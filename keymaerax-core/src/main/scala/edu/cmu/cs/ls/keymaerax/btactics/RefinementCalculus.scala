@@ -94,7 +94,6 @@ object RefinementCalculus {
   //region Proof rules from Fig. 4, reformulated as axioms.
 
   lazy val refineAntisym : BelleExpr = "refineAntisym" by HilbertCalculus.byUS("refine antisym")
-
   lazy val refineAntisymRule : DependentPositionTactic = "refineAntisymRule" by ((pos:Position, s: Sequent) => {
     import Augmentors._
     //Computes a uniform substitution instance of the axiom for use in implicational rewriting using CEat.
@@ -113,6 +112,26 @@ object RefinementCalculus {
     val (aRepl, bRepl) = s(pos) match {
       case ProgramEquiv(l,r) => (l,r)
       case _ => throw new Exception(s"Expected program equivalence formula but found ${s(pos).prettyString}")
+    }
+
+    val axiomInstance = USubst(a ~> aRepl :: b ~> bRepl :: Nil)(axiom.provable)
+
+    (HilbertCalculus.CEat(axiomInstance)(pos) & TactixLibrary.andR(pos)).partial
+  })
+
+  lazy val refineUnloop : BelleExpr = "refineUnloop" by HilbertCalculus.byUS("refine unloop")
+  lazy val refineUnloopRule : DependentPositionTactic = "refineUnloop" by((pos: Position, s: Sequent) => {
+    import Augmentors._
+    val axiom = AxiomInfo.ofCodeName("refineUnloop")
+
+    val (a,b) = axiom.formula match {
+      case Imply(_, Refinement(Loop(a),Loop(b))) => (a,b)
+      case _ => throw new Exception(s"Expected axiom of form a*=<b* -> ... but found ${axiom.formula}")
+    }
+
+    val (aRepl, bRepl) = s(pos) match {
+      case Refinement(Loop(l),Loop(r)) => (l,r)
+      case _ => throw new Exception(s"Expected program refinement formula but found ${s(pos).prettyString}")
     }
 
     val axiomInstance = USubst(a ~> aRepl :: b ~> bRepl :: Nil)(axiom.provable)

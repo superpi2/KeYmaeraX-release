@@ -8,7 +8,7 @@ package dRL
 import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
 import edu.cmu.cs.ls.keymaerax.btactics._
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
-import org.scalatest.Ignore // adds .asFormula, .asProgram, .asTerm methods to String class.
+import scala.collection.immutable
 
 /**
   * Most basic tests for some tactics in the btactics.dRL namespace.
@@ -68,16 +68,56 @@ class RefinementCalculusTests extends TacticTestBase {
   it should "produce correct from an equality assumption." in {withMathematica({implicit qeTool => {
     val f = "(a; == b;)".asFormula
     val t = RefinementCalculus.refineAntisymRule('R)
+    val result = proveBy(f,t)
 
-    proveBy(f,t).subgoals(0).succ(0) shouldBe "((a; =< b;)&(b; =< a;))".asFormula
+    //provable should have the correct shape.
+    result.subgoals.length shouldBe 2
+    result.subgoals(0).ante.length shouldBe 0
+    result.subgoals(0).succ.length shouldBe 1
+    result.subgoals(1).ante.length shouldBe 0
+    result.subgoals(1).succ.length shouldBe 1
+
+    result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("(a; =< b;)".asFormula, "(b; =< a;)".asFormula)
   }})}
 
   it should "produce correct us instance from an equality assumption." in {withMathematica({implicit qeTool => {
     val f = "(x:=1; == x:=2;)".asFormula
     val t = RefinementCalculus.refineAntisymRule('R)
+    val result = proveBy(f,t)
 
-    proveBy(f,t).subgoals(0).succ(0) shouldBe "((x:=1; =< x:=2;)&(x:=2; =< x:=1;))".asFormula
+    //provable should have the correct shape.
+    result.subgoals.length shouldBe 2
+    result.subgoals(0).ante.length shouldBe 0
+    result.subgoals(0).succ.length shouldBe 1
+    result.subgoals(1).ante.length shouldBe 0
+    result.subgoals(1).succ.length shouldBe 1
+
+    result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("(x:=1; =< x:=2;)".asFormula, "(x:=2; =< x:=1;)".asFormula)
   }})}
+
+  "refine unloop" should "proof itself" in {withMathematica(implicit qetool => {
+    val f = "({a;}* =< {b;}*) <- [{a;}*]({a;}* =< {b;}*)".asFormula
+    proveBy(f, RefinementCalculus.refineUnloop) shouldBe 'proved
+  })}
+
+  it should "prove a subst on itself" in {withMathematica({implicit qeTool => {
+    val f = "({g;}* =< {d;}*) <- [{g;}*]({g;}* =< {d;}*)".asFormula
+    proveBy(f, RefinementCalculus.refineUnloop) shouldBe 'proved
+  }})}
+
+  it should "produce correct subgoals" in {withMathematica(implicit qeTool => {
+    val f = "({g;}* =< {d;}*)".asFormula
+    val t = RefinementCalculus.refineUnloopRule('R)
+    val result = proveBy(f,t)
+
+    //provable should have the correct shape.
+    result.subgoals.length shouldBe 1
+    result.subgoals(0).ante.length shouldBe 0
+    result.subgoals(0).succ.length shouldBe 1
+
+    result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("[{g;}*]({g;}* =< {d;}*)".asFormula)
+  })}
+
 
   "Paper Example 1 (natural partial order)" should "prove using the proof from the paper" ignore {withMathematica(implicit qeTool => {
     val formula = "({a;++b;}==b;) <-> (a; =< b;)".asFormula
