@@ -14,6 +14,9 @@ import org.scalatest.{FlatSpec, Matchers}
   * @author Nathan Fulton
   */
 class ParserTests extends FlatSpec with Matchers {
+  val a_ = ProgramConst("a")
+  val b_ = ProgramConst("b")
+
   "KeYmaeraX Parser" should "parse x:=1 =< x:=1" in {
     val input = "x := 1; =< x := 2;"
     KeYmaeraXParser(input) shouldBe Refinement("x:=1;".asProgram, "x:=2;".asProgram)
@@ -40,6 +43,10 @@ class ParserTests extends FlatSpec with Matchers {
 
   it should "parse us of [=<] axiom" in {
     val f = "([a:=1;]a=1) <-> (([a:=2;]a=1)&(a:=1; =< a:=2;))".asFormula
+  }
+
+  it should "parse formulas that begin with programs" in {
+    "({a;++b;}==b;) <-> (a; =< b;)".asFormula shouldBe Equiv(ProgramEquiv(Choice(a_,b_), b_), Refinement(a_, b_))
   }
 
 

@@ -758,7 +758,7 @@ object KeYmaeraXParser extends Parser {
 
   /** First(Formula): Is la the beginning of a new formula? */
   private def firstFormula(la: Terminal): Boolean = firstTerm(la) || /*la.isInstanceOf[IDENT] ||*/
-    la==NOT || la==FORALL || la==EXISTS || la==LBOX || la==LDIA || la==TRUE || la==FALSE || la==PLACE /*|| la==LPAREN */
+    la==NOT || la==FORALL || la==EXISTS || la==LBOX || la==LDIA || la==TRUE || la==FALSE || la==PLACE || firstProgram(la) /*|| la==LPAREN */
 
   /** First(Program): Is la the beginning of a new program? */
   private def firstProgram(la: Terminal): Boolean = la.isInstanceOf[IDENT] || la==TEST || la==LBRACE
