@@ -939,7 +939,10 @@ case class AndRight(pos: SuccPos) extends RightRule {
   val name: String = "And Right"
   /** &R And right */
   def apply(s: Sequent): immutable.List[Sequent] = {
-    val And(p,q) = s(pos)
+    val (p,q) = s(pos) match {
+      case And(p,q) => (p,q)
+      case _ => throw new Exception(s"AndRight expected to find a conjunction at ${pos.toString} but instead found ${s(pos).prettyString}")
+    }
     immutable.List(s.updated(pos, p), s.updated(pos, q))
   }
 }
