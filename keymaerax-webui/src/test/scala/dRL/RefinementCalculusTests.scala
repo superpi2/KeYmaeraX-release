@@ -7,7 +7,8 @@ package dRL
 
 import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
 import edu.cmu.cs.ls.keymaerax.btactics._
-import edu.cmu.cs.ls.keymaerax.parser.StringConverter._ // adds .asFormula, .asProgram, .asTerm methods to String class.
+import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
+import org.scalatest.Ignore // adds .asFormula, .asProgram, .asTerm methods to String class.
 
 /**
   * Most basic tests for some tactics in the btactics.dRL namespace.
@@ -78,9 +79,12 @@ class RefinementCalculusTests extends TacticTestBase {
     proveBy(f,t).subgoals(0).succ(0) shouldBe "((x:=1; =< x:=2;)&(x:=2; =< x:=1;))".asFormula
   }})}
 
-
-  "Paper Example 1 (natural partial order)" should "prove using the proof from the paper" in {withMathematica(implicit qeTool => {
+  "Paper Example 1 (natural partial order)" should "prove using the proof from the paper" ignore {withMathematica(implicit qeTool => {
     val formula = "({a;++b;}==b;) <-> (a; =< b;)".asFormula
-//    val tactic  = RefinementCalculus.refineAntisymRule('R) //@todo
+    //@todo implement and un-ignore
+  })}
+
+  "Paper example 2" should "prove using the proof from the paper" ignore {withMathematica(implicit qeTool => {
+    //@todo implement and un-ignore
   })}
 }
