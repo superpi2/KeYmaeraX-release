@@ -495,15 +495,15 @@ End.
  * @see http://reports-archive.adm.cs.cmu.edu/anon/2015/CMU-CS-15-144.pdf @todo properly cite
  */
 Axiom "refine choice comm".
-  {a; ++ b;} ~~ {b; ++ a;}
+  {a; ++ b;} == {b; ++ a;}
 End.
 
 Axiom "refine id".
-  a; <~ a;
+  a; =< a;
 End.
 
 Axiom "[=<]".
-  [a;]p(??) <- ( ([b;]p(??)) & (a; <~ b;) )
+  [a;]p(??) <- ( ([b;]p(??)) & (a; =< b;) )
 End.
 """
 }

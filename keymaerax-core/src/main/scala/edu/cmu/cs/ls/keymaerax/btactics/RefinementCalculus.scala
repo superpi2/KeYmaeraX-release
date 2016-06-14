@@ -23,7 +23,7 @@ object RefinementCalculus {
     * Note that the [a;]p(??) goal must be top-level and the only subgoal in the succedent. These contraints can and should
     * be relaxed.
     * {{{
-    *   \Gamma |- [b;]p(??)   \Gamma |- a <~ b
+    *   \Gamma |- [b;]p(??)   \Gamma |- a =< b
     *   ----------------------------------------------
     *         \Gamma |- [a;]p(??)
     * }}}
@@ -66,7 +66,7 @@ object RefinementCalculus {
 
   //region Idempotent Semiring axioms for proving refinements
 
-  /** Attempts to automatically prove that a <~ b by applying idempotent semiring axioms.
+  /** Attempts to automatically prove that a =< b by applying idempotent semiring axioms.
     *
     * @todo come up with a good tactic modulo odes(/loops?) based on a KAT DP?
     */
@@ -75,7 +75,7 @@ object RefinementCalculus {
   /**
     * Proves
     * {{{
-    *   a; <~ a;
+    *   a; =< a;
     * }}}
     */
   lazy val refineId : BelleExpr = "refineId" by HilbertCalculus.byUS("refine id")
@@ -83,7 +83,7 @@ object RefinementCalculus {
   /**
     * Proves
     * {{{
-    *   {a; ++ b;} ~~ {b; ++ a;}
+    *   {a; ++ b;} == {b; ++ a;}
     * }}}
     */
   lazy val refineChoiceComm : BelleExpr = "refineChoiceComm" by HilbertCalculus.byUS("refine choice comm")

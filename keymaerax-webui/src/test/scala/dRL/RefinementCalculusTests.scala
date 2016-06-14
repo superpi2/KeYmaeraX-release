@@ -15,19 +15,19 @@ import edu.cmu.cs.ls.keymaerax.parser.StringConverter._ // adds .asFormula, .asP
   */
 class RefinementCalculusTests extends TacticTestBase {
   "refine choice comm axiom" should "prove itself" in {withMathematica(implicit qeTool => {
-    val formula = "{a; ++ b;} ~~ {b; ++ a;}".asFormula
+    val formula = "{a; ++ b;} == {b; ++ a;}".asFormula
     val result = proveBy(formula, RefinementCalculus.refineChoiceComm)
     result shouldBe 'proved //same as result.isProved shouldBe true
   })}
 
   it should "prove a substitution of itself" in {withMathematica(implicit qeTool => {
-    val formula = "{x:=1; ++ x:=2;} ~~ {x:=2; ++ x:=1;}".asFormula
+    val formula = "{x:=1; ++ x:=2;} == {x:=2; ++ x:=1;}".asFormula
     val result = proveBy(formula, RefinementCalculus.refineChoiceComm)
     result shouldBe 'proved //same as result.isProved shouldBe true
   })}
 
-  "refineId" should "prove x:=1; <~ x:=1;" in {
-    val formula = "{x:=1;} <~ {x:=1;}".asFormula
+  "refineId" should "prove x:=1; =< x:=1;" in {
+    val formula = "{x:=1;} =< {x:=1;}".asFormula
     val result = proveBy(formula, RefinementCalculus.refineId)
     result shouldBe 'proved
   }

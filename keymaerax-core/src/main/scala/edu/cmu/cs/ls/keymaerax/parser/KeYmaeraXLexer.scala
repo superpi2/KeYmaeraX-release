@@ -252,8 +252,8 @@ object TOOL_VALUE_PAT {
 ///////////
 // Section: Refinement Relations
 ///////////
-object REFINES extends Terminal("<~")
-object REFINE_EQUIV extends Terminal("~~")
+object REFINES extends Terminal("=<")
+object REFINE_EQUIV extends Terminal("==")
 
 /**
  * Created by aplatzer on 6/8/15.
