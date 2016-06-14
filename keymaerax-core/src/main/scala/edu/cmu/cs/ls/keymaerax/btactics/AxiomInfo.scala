@@ -662,7 +662,10 @@ object DerivationInfo {
 
     new CoreAxiomInfo("refine choice comm", ("≤∪ comm", "refineChoiceComm"), "refineChoiceComm", {case () => RefinementCalculus.refineChoiceComm}),
     new CoreAxiomInfo("refine id", ("≤ identity", "refineId"), "refineId", {case () => RefinementCalculus.refineId}),
-    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.boxRefineAxiom}) //@todo add boxRefine w/ arg.
+
+    new CoreAxiomInfo("refine antisym", ("≤ antisym", "refineAntisym"), "refineAntisym", {case () => RefinementCalculus.refineAntisym}),
+
+    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.refineAntisym}) //@todo add boxRefine w/ arg.
   ) ensuring(consistentInfo _, "meta-information on AxiomInfo is consistent with actual (derived) axioms etc.")
 
   private def consistentInfo(list: List[DerivationInfo]): Boolean = {

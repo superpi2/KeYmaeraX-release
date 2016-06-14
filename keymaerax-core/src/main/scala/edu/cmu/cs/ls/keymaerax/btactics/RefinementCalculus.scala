@@ -91,6 +91,37 @@ object RefinementCalculus {
 
   //endregion
 
+  //region Proof rules from Fig. 4, reformulated as axioms.
+
+  lazy val refineAntisym : BelleExpr = "refineAntisym" by HilbertCalculus.byUS("refine antisym")
+
+  lazy val refineAntisymRule : DependentPositionTactic = "refineAntisymRule" by ((pos:Position, s: Sequent) => {
+    import Augmentors._
+    //Computes a uniform substitution instance of the axiom for use in implicational rewriting using CEat.
+    //Otherwise if we use CEat (with no context) then we wend up trying to prove a uniform subst instance of the axiom
+    //using the literal axiom, which obviously won't do.
+    //@todo is there a better (or at least standardized) way of doing this?
+    //@note contexutal CEat might be intended for this sort of thing but I'm not too familiar with that.
+    //@todo if not then move this into a core library; maybe UnifyUSCalculus.
+    val axiom = AxiomInfo.ofCodeName("refineAntisym")
+
+    val (a,b) = axiom.formula match {
+      case Imply(_, ProgramEquiv(a,b)) => (a,b)
+      case _ => throw new Exception(s"Expected axiom of form a==b -> ... but found ${axiom.formula}")
+    }
+
+    val (aRepl, bRepl) = s(pos) match {
+      case ProgramEquiv(l,r) => (l,r)
+      case _ => throw new Exception(s"Expected program equivalence formula but found ${s(pos).prettyString}")
+    }
+
+    val axiomInstance = USubst(a ~> aRepl :: b ~> bRepl :: Nil)(axiom.provable)
+
+    HilbertCalculus.CEat(axiomInstance)(pos)
+  })
+
+  //endregion
+
 
   //region General-purpose helpers @todo move region out of this object and into another.
 

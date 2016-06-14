@@ -11,6 +11,7 @@ import edu.cmu.cs.ls.keymaerax.parser.StringConverter._ // adds .asFormula, .asP
 
 /**
   * Most basic tests for some tactics in the btactics.dRL namespace.
+  * @note This suite only tests that axioms behave properly, so anything that isn't asserted to be 'proved might be nonsense.
   * @author Nathan Fulton
   */
 class RefinementCalculusTests extends TacticTestBase {
@@ -51,5 +52,35 @@ class RefinementCalculusTests extends TacticTestBase {
     val tactic = RefinementCalculus.CP(PosInExpr(0 :: Nil)) & RefinementCalculus.refineChoiceComm
     val result = proveBy(formula, tactic)
     result shouldBe 'proved
+  })}
+
+  "refine antisym" should "prove itself" in {withMathematica(implicit qetool => {
+    val f = "(a; == b;) <- ((a; =< b;) & (b; =< a;))".asFormula
+    proveBy(f, RefinementCalculus.refineAntisym) shouldBe 'proved
+  })}
+
+  it should "prove a subst on itself" in {withMathematica({implicit qeTool => {
+    val f = "(g; == d;) <- ((g; =< d;) & (d; =< g;))".asFormula
+    proveBy(f, RefinementCalculus.refineAntisym) shouldBe 'proved
+  }})}
+
+  it should "produce correct from an equality assumption." in {withMathematica({implicit qeTool => {
+    val f = "(a; == b;)".asFormula
+    val t = RefinementCalculus.refineAntisymRule('R)
+
+    proveBy(f,t).subgoals(0).succ(0) shouldBe "((a; =< b;)&(b; =< a;))".asFormula
+  }})}
+
+  it should "produce correct us instance from an equality assumption." in {withMathematica({implicit qeTool => {
+    val f = "(x:=1; == x:=2;)".asFormula
+    val t = RefinementCalculus.refineAntisymRule('R)
+
+    proveBy(f,t).subgoals(0).succ(0) shouldBe "((x:=1; =< x:=2;)&(x:=2; =< x:=1;))".asFormula
+  }})}
+
+
+  "Paper Example 1 (natural partial order)" should "prove using the proof from the paper" in {withMathematica(implicit qeTool => {
+    val formula = "({a;++b;}==b;) <-> (a; =< b;)".asFormula
+//    val tactic  = RefinementCalculus.refineAntisymRule('R) //@todo
   })}
 }
