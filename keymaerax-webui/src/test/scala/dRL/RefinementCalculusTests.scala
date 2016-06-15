@@ -7,7 +7,9 @@ package dRL
 
 import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
 import edu.cmu.cs.ls.keymaerax.btactics._
+import edu.cmu.cs.ls.keymaerax.core.{Provable, Sequent}
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
+
 import scala.collection.immutable
 
 /**
@@ -118,6 +120,36 @@ class RefinementCalculusTests extends TacticTestBase {
     result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("[{g;}*]({g;} =< {d;})".asFormula)
   })}
 
+  "refineCompose" should "prove itself" in {
+    val f = "{a1;b1;} =< {a2;b2;} <- ( a1; =< a2; & [a1;](b1; =< b2;) )".asFormula
+    proveBy(f, RefinementCalculus.refineCompose)
+  }
+
+  it should "prove a us of itself" in {
+    val f = "{g1;d1;} =< {g2;d2;} <- ( g1; =< g2; & [g1;](d1; =< d2;) )".asFormula
+    proveBy(f, RefinementCalculus.refineCompose)
+  }
+
+  "refineComposeRule" should "work" in {
+    val f = "{g1;d1;} =< {g2;d2;}".asFormula
+    val result = proveBy(f, RefinementCalculus.refineComposeRule('R))
+
+    result.subgoals.length shouldBe 2
+    val r1 = new Sequent(immutable.IndexedSeq(), immutable.IndexedSeq("g1; =< g2;".asFormula))
+    val r2 = new Sequent(immutable.IndexedSeq(), immutable.IndexedSeq("[g1;](d1; =< d2;)".asFormula))
+    result.subgoals(0) shouldBe r1
+    result.subgoals(1) shouldBe r2
+  }
+
+  "refineAssignAny" should "prove itself" in {
+    val f = "x:=t; =< x:=*;".asFormula
+    proveBy(f, RefinementCalculus.refineAssignAny) shouldBe 'proved
+  }
+
+  it should "prove us of itself" in {
+    val f = "{a:=blah;} =< {a:=*;}".asFormula
+    proveBy(f, RefinementCalculus.refineAssignAny) shouldBe 'proved
+  }
 
   "Paper Example 1 (natural partial order)" should "prove using the proof from the paper" ignore {withMathematica(implicit qeTool => {
     val formula = "({a;++b;}==b;) <-> (a; =< b;)".asFormula
@@ -126,8 +158,16 @@ class RefinementCalculusTests extends TacticTestBase {
 
   "Paper example 2" should "prove using the proof from the paper" in {withMathematica(implicit qeTool => {
     val f = "{a; x:=t; b;}* =< {a; x:=*; b;}*".asFormula
-    val t = RefinementCalculus.refineUnloopRule('R) & TactixLibrary.G
+    //@todo a generic way of saying "apply this always on the final subgoal, and just let the other guys accumulate if they don't prove automatically using blah" would be nice.
+    //@todo also nice: try proving using blah always. If it doesn't work out let it accumulate and move on.
+    val t = RefinementCalculus.refineUnloopRule('R) & TactixLibrary.G & RefinementCalculus.refineComposeRule('R) <(
+      HilbertCalculus.byUS("refine id") & DebuggingTactics.assertProved,
+      TactixLibrary.G & RefinementCalculus.refineComposeRule('R) <(
+        RefinementCalculus.refineAssignAny,
+        TactixLibrary.G & HilbertCalculus.byUS("refine id") & DebuggingTactics.assertProved
+      )
+    )
 
-    println(proveBy(f,t).prettyString)
+    proveBy(f,t) shouldBe 'proved
   })}
 }

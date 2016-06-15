@@ -666,6 +666,7 @@ object DerivationInfo {
     new CoreAxiomInfo("refine antisym", ("≤ antisym", "refineAntisym"), "refineAntisym", {case () => RefinementCalculus.refineAntisym}),
     new CoreAxiomInfo("refine unloop", ("≤ unloop", "refineUnloop"), "refineUnloop", {case () => RefinementCalculus.refineUnloop}),
     new CoreAxiomInfo("refine (;)", ("≤ (;)", "refineCompose"), "refineCompose", {case () => RefinementCalculus.refineCompose}),
+    new CoreAxiomInfo("refine :=*", ("≤ :=*", "refineAssignAny"), "refineAssignAny", {case () => RefinementCalculus.refineAssignAny}),
 
     new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.refineAntisym}) //@todo add boxRefine w/ arg.
   ) ensuring(consistentInfo _, "meta-information on AxiomInfo is consistent with actual (derived) axioms etc.")
