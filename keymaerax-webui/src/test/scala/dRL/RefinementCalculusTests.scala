@@ -96,12 +96,12 @@ class RefinementCalculusTests extends TacticTestBase {
   }})}
 
   "refine unloop" should "proof itself" in {withMathematica(implicit qetool => {
-    val f = "({a;}* =< {b;}*) <- [{a;}*]({a;}* =< {b;}*)".asFormula
+    val f = "({a;}* =< {b;}*) <- [{a;}*]({a;} =< {b;})".asFormula
     proveBy(f, RefinementCalculus.refineUnloop) shouldBe 'proved
   })}
 
   it should "prove a subst on itself" in {withMathematica({implicit qeTool => {
-    val f = "({g;}* =< {d;}*) <- [{g;}*]({g;}* =< {d;}*)".asFormula
+    val f = "({g;}* =< {d;}*) <- [{g;}*]({g;} =< {d;})".asFormula
     proveBy(f, RefinementCalculus.refineUnloop) shouldBe 'proved
   }})}
 
@@ -115,7 +115,7 @@ class RefinementCalculusTests extends TacticTestBase {
     result.subgoals(0).ante.length shouldBe 0
     result.subgoals(0).succ.length shouldBe 1
 
-    result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("[{g;}*]({g;}* =< {d;}*)".asFormula)
+    result.subgoals.map(_.succ(0)) shouldBe immutable.IndexedSeq("[{g;}*]({g;} =< {d;})".asFormula)
   })}
 
 
@@ -124,7 +124,10 @@ class RefinementCalculusTests extends TacticTestBase {
     //@todo implement and un-ignore
   })}
 
-  "Paper example 2" should "prove using the proof from the paper" ignore {withMathematica(implicit qeTool => {
-    //@todo implement and un-ignore
+  "Paper example 2" should "prove using the proof from the paper" in {withMathematica(implicit qeTool => {
+    val f = "{a; x:=t; b;}* =< {a; x:=*; b;}*".asFormula
+    val t = RefinementCalculus.refineUnloopRule('R) & TactixLibrary.G
+
+    println(proveBy(f,t).prettyString)
   })}
 }

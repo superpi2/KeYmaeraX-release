@@ -507,7 +507,7 @@ Axiom "refine antisym".
 End.
 
 Axiom "refine unloop".
-  ({a;}* =< {b;}*) <- [{a;}*]({a;}* =< {b;}*)
+  ({a;}* =< {b;}*) <- [{a;}*]({a;} =< {b;})
 End.
 
 Axiom "[=<]".
