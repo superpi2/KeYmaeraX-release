@@ -80,7 +80,9 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     }
     case replp: Program => what match {
       case _: ProgramConst | _: DifferentialProgramConst => bottom // program constants are always admissible, since their meaning doesn't depend on state
-      case ProgramOf(f,a) => StaticSemantics.freeVars(a)
+      case ProgramOf(f,DotProgram) => bottom
+      case ProgramOf(f, DotDiffProgram) => bottom
+      case ProgramOf(f,a) => StaticSemantics.freeVars(a)  1
       case _ => assert(false, "already disallowed by insist(matchKey)"); throw new CoreException("Disallowed substitution shape " + this)
     }
   }
