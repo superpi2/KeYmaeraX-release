@@ -223,6 +223,7 @@ object OpSpec {
   val sCompose      = BinaryOpSpec[Program](SEMI,     230, RightAssociative, binprog, Compose.apply _) //@todo compatibility mode for parser
   //valp: Compose     => OpNotation("",    230, RightAssociative)
   val sChoice       = BinaryOpSpec[Program](CHOICE,   250, RightAssociative, binprog, Choice.apply _)
+  val sProgramOf = UnaryOpSpec(none,      0, PrefixFormat, unfml, (name, e:Expression) => ProgramPredicateOf(Function(name, None, Trafo, Trafo), e.asInstanceOf[Program]).asInstanceOf[Expression])
 
   val sRefines = BinaryOpSpec[Expression](REFINES, 2, RightAssociative, binprog, (p:Expression, q:Expression) => (p,q) match {
     case (p:Program, q:Program) => Refinement.apply(p,q)
@@ -269,6 +270,7 @@ object OpSpec {
     case f: PredOf       => sPredOf
     case f: PredicationalOf => sPredicationalOf
     case f: ProgramPredicateOf => sProgramPredicateOf
+    case f: ProgramOf          => sProgramOf
     case f: DifferentialFormula => sDifferentialFormula
     case f: Equal        => sEqual
     case f: NotEqual     => sNotEqual

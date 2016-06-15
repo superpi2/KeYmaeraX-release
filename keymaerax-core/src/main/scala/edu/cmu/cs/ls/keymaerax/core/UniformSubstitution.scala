@@ -80,6 +80,7 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     }
     case replp: Program => what match {
       case _: ProgramConst | _: DifferentialProgramConst => bottom // program constants are always admissible, since their meaning doesn't depend on state
+      case ProgramOf(f,a) => StaticSemantics.freeVars(a)
       case _ => assert(false, "already disallowed by insist(matchKey)"); throw new CoreException("Disallowed substitution shape " + this)
     }
   }
@@ -119,6 +120,7 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     case DotFormula                  => DotFormula
     case PredicationalOf(p: Function, DotFormula) => p
     case ProgramPredicateOf(f: Function, DotProgram) => f
+    case ProgramOf(f:Function, DotProgram) => f
     case _ => throw new CoreException("Nonsubstitutable expression " + this)
   }
 
@@ -139,6 +141,9 @@ final case class SubstitutionPair (what: Expression, repl: Expression) {
     case ProgramPredicateOf(lf,a) =>
       assert(a match {case DotProgram => true case DotDiffProgram => true case _ => false}, "Only DotPrograms and DotDiffPrograms as argument")
       other match {case ProgramPredicateOf(rf, _) => lf == rf case _ => false}
+    case ProgramOf(lf,a) =>
+      assert(a match {case DotProgram => true case DotDiffProgram => true case _ => false}, "Only DotPrograms and DotDiffPrograms as argument")
+      other match {case ProgramOf(rf, _) => lf == rf case _ => false}
     case _:ApplicationOf => assert(false, "sameHead should include cases for all ApplicationOf subclasses, but missed one."); false
     case _ => assert(false, "sameHead only used for ApplicationOf"); false
   }
@@ -471,6 +476,20 @@ final case class USubst(subsDefsInput: immutable.Seq[SubstitutionPair]) extends 
       case Loop(a)           => requireAdmissible(StaticSemantics(usubst(a)).bv, a, program)
         Loop(usubst(a))
       case Dual(a)           => Dual(usubst(a))
+
+      //@todo check these cases carefully; copy-pased from programpredicateof case...
+      case app@ProgramOf(op, arg) if matchHead(app) => {
+        requireAdmissible(topVarsDiffVars[NamedSymbol](), arg, program)
+        val subs = uniqueElementOf[SubstitutionPair](subsDefs, sp => sp.what.isInstanceOf[ProgramOf] && sp.sameHead(app))
+        val ProgramOf(wp, wArg) = subs.what
+        assert(wp == op, "match only if same head")
+        assert(wArg == DotProgram)
+        USubst(SubstitutionPair(wArg, usubst(arg)) :: Nil).usubst(subs.repl.asInstanceOf[Program])
+      }
+      case app@ProgramOf(op, arg) if !matchHead(app) => {
+        requireAdmissible(topVarsDiffVars[NamedSymbol](), arg, program)
+        ProgramOf(op, usubst(arg))
+      }
     }
   } ensuring(r => r.kind==program.kind && r.sort==program.sort, "Uniform Substitution leads to same kind and same sort " + program)
 

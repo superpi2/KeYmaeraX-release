@@ -237,6 +237,8 @@ object StaticSemantics {
       case Loop(a) => val va = progVars(a); VCP(fv = va.fv, bv = va.bv, mbv = bottom)
       case Dual(a) => val va = progVars(a); VCP(fv = va.fv, bv = va.bv, mbv = va.mbv)
 
+      case ProgramOf(f,a) => VCP(fv = topVarsDiffVars(), bv = topVarsDiffVars(), mbv=topVarsDiffVars())
+
       // special cases
       //@note x:=* in analogy to x:=e
       case AssignAny(x) => VCP(fv = bottom, bv = SetLattice(x), mbv = SetLattice(x))
@@ -360,6 +362,7 @@ object StaticSemantics {
     case Dual(a)          => signature(a)
     case ODESystem(a, h)  => signature(a) ++ signature(h)
     case DifferentialProduct(a, b) => signature(a) ++ signature(b)
+    case ProgramOf(f,a) => Set(f) ++ signature(a)
   }
 
   /**

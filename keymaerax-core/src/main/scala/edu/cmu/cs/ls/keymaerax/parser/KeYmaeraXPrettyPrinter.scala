@@ -273,6 +273,8 @@ class KeYmaeraXPrinter extends BasePrettyPrinter {
       pwrapLeft(t, pp(q+0, t.left)) + /*op(t).opcode + */ pwrapRight(t, pp(q+1, t.right))
     case t: BinaryCompositeProgram =>
       pwrapLeft(t, pp(q+0, t.left)) + op(t).opcode + pwrapRight(t, pp(q+1, t.right))
+
+    case ProgramOf(f,p) => f.asString + "(" + pp(q+0, p) + ")" //@todo do we need yet another set of wrappers?
   })
 
   private def ppODE(q: PosInExpr, program: DifferentialProgram): String = emit(q, program match {

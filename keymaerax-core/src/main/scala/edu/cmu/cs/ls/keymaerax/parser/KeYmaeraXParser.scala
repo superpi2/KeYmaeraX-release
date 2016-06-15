@@ -390,6 +390,11 @@ object KeYmaeraXParser extends Parser {
       // program predicational symbols
       case r :+ Token(IDENT(name,idx),_) :+ (optok@Token(LBRACE,_)) :+ Expr(p:Program) :+ Token(RBRACE,_) =>
         if (followsFormula(la)) reduce(st, 4, ProgramPredicateOf(Function(name, idx, Trafo, Bool), p), r)
+        else error(st, List(FOLLOWSFORMULA)
+
+      // program predicational symbols
+      case r :+ Token(IDENT(name,idx),_) :+ (optok@Token(LPAREN,_)) :+ Expr(p:Program) :+ Token(RPAREN,_) =>
+        if (followsFormula(la)) reduce(st, 4, ProgramOf(Function(name, idx, Trafo, Trafo), p), r)
         else error(st, List(FOLLOWSFORMULA))
 
       case r :+ Token(tok:IDENT,_) :+ Token(LPAREN,_) =>

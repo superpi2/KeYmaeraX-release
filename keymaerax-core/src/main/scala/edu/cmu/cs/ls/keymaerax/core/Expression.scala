@@ -623,6 +623,11 @@ sealed case class ProgramPredicateOf(f: Function, a: Program) extends Formula wi
   override def func: Function = f
   override def child: Expression = a
 }
+sealed case class ProgramOf(f: Function, a: Program) extends Program with ApplicationOf {
+  assert(f.domain == Trafo && f.sort == Trafo, s"ProgramOf : Trafo -> Trafo, but found ${f.domain} -> ${f.sort}")
+  override def func: Function = f
+  override def child: Expression = a
+}
 
 /** Placeholder for programs. Reserved predicational symbol _ for substitutions are unlike ordinary predicational symbols */
 object DotProgram extends ProgramConst("DotProgram")
