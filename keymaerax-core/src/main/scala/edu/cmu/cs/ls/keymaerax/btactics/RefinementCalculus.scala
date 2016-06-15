@@ -120,7 +120,7 @@ object RefinementCalculus {
   })
 
   lazy val refineUnloop : BelleExpr = "refineUnloop" by HilbertCalculus.byUS("refine unloop")
-  lazy val refineUnloopRule : DependentPositionTactic = "refineUnloop" by((pos: Position, s: Sequent) => {
+  lazy val refineUnloopRule : DependentPositionTactic = "refineUnloopRule" by((pos: Position, s: Sequent) => {
     import Augmentors._
     val axiom = AxiomInfo.ofCodeName("refineUnloop")
 
@@ -137,6 +137,26 @@ object RefinementCalculus {
     val axiomInstance = USubst(a ~> aRepl :: b ~> bRepl :: Nil)(axiom.provable)
 
     HilbertCalculus.CEat(axiomInstance)(pos)
+  })
+
+  lazy val refineCompose : BelleExpr = "refineCompose" by HilbertCalculus.byUS("refine (;)")
+  lazy val refineComposeRule : DependentPositionTactic = "refineComposeRule" by((pos: Position, s: Sequent) => {
+    import Augmentors._
+    val axiom = AxiomInfo.ofCodeName("refineCompose")
+
+    val (a1,b1, a2, b2) = axiom.formula match {
+      case Imply(_, Refinement(Compose(a1,b1),Compose(a2,b2))) => (a1, b1, a2, b2)
+      case _ => throw new Exception(s"Expected axiom of form a1;b1;=<a2;b2; -> ... but found ${axiom.formula}")
+    }
+
+    val (a1Repl, b1Repl, a2Repl, b2Repl) = s(pos) match {
+      case Refinement(Compose(a1,b1),Compose(a2,b2)) => (a1,b1,a2,b2)
+      case _ => throw new Exception(s"Expected program refinement formula but found ${s(pos).prettyString}")
+    }
+
+    val axiomInstance = USubst(a1 ~> a1Repl :: b1 ~> b1Repl :: a2 ~> a2Repl :: b2 ~> b2Repl :: Nil)(axiom.provable)
+
+    HilbertCalculus.CEat(axiomInstance)(pos) & TactixLibrary.andR(pos)
   })
 
   //endregion
