@@ -225,7 +225,7 @@ object Context {
     case f: Formula => part (f, pos)
     case f: DifferentialProgram => part (f, pos)
     case f: Program => part (f, pos)
-    case _ => ???  // trivial totality on possibly problematic patmats
+    case _ => ???  // trivial totality on possibly problematic patmats Actually, no! Unapplied functions of Trafo -> Trafo are none of these?
   }
 
   /** @see [[edu.cmu.cs.ls.keymaerax.btactics.StaticSemanticsTools.boundAt()]] for same positions */
@@ -274,6 +274,10 @@ object Context {
     case f:UnaryCompositeProgram  if pos.head==0 => part(f.child, pos.child)
     case f:BinaryCompositeProgram if pos.head==0 => part(f.left, pos.child)
     case f:BinaryCompositeProgram if pos.head==1 => part(f.right, pos.child)
+
+    case app:ProgramOf if(pos.head==0) => app.f
+    case app:ProgramOf if(pos.head==1) => part(app.a, pos.child)
+
     case _ => throw new IllegalArgumentException("part position " + pos + " of program " + program + " may not be defined")
   }}
 
@@ -364,6 +368,7 @@ object Context {
     case f:UnaryCompositeProgram  if pos.head==0 => f.reapply(replaceAt(f.child, pos.child, repl))
     case f:BinaryCompositeProgram if pos.head==0 => f.reapply(replaceAt(f.left, pos.child, repl), f.right)
     case f:BinaryCompositeProgram if pos.head==1 => f.reapply(f.left, replaceAt(f.right, pos.child, repl))
+
     case _ => throw new IllegalArgumentException("replaceAt position " + pos + " of program " + program + " by " + repl + " may not be defined")
   }
 
@@ -541,9 +546,11 @@ sealed trait Context[+T <: Expression] extends (Expression => Formula) {
   */
 private class ReplacementContext[+T <: Expression](replicate: T, dot: PosInExpr) extends Context[T] {
   private lazy val dotty = if (isFormulaContext) DotFormula else if (isTermContext) DotTerm else if (isProgramContext) DotProgram else DotDiffProgram
-  def ctx: T = apply(dotty).asInstanceOf[T]
+  def ctx: T = applyWithoutCast(dotty).asInstanceOf[T]
 
   def apply(e: Expression): Formula = Context.replaceAt(replicate, dot, e).asInstanceOf[Formula]
+
+  def applyWithoutCast(e: Expression) = Context.replaceAt(replicate, dot, e)
 
   /** What is replaced by argument (so not part of the context in fact) */
   private lazy val replacee: Expression = Context.at(replicate, dot)._2
