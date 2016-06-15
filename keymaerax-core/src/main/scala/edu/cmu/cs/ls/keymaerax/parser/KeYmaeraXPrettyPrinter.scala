@@ -251,7 +251,7 @@ class KeYmaeraXPrinter extends BasePrettyPrinter {
     case t: BinaryCompositeFormula=>
       wrapLeft(t, pp(q+0, t.left)) + op(t).opcode + wrapRight(t, pp(q+1, t.right))
     case r: Refinement => "({" + pp(q+0, r.a) + "} " + op(r).opcode + " {" + pp(q+1, r.b) + "})" //@todo less hack better precedence wrapping
-    case r: ProgramEquiv => "(" + pp(q+0, r.a) ++ " " + op(r).opcode + " " + pp(q+1, r.b) + ")" //@todo less hack better precedence wrapping
+    case r: ProgramEquiv => "({" + pp(q+0, r.a) ++ "} " + op(r).opcode + " {" + pp(q+1, r.b) + "})" //@todo less hack better precedence wrapping
   })
 
   private def pp(q: PosInExpr, program: Program): String = emit(q, program match {
