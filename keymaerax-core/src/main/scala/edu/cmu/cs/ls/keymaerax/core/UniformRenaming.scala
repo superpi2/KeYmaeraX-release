@@ -158,6 +158,10 @@ sealed trait Renaming extends (Expression => Expression) {
 
     case Box(p, g)       => Box(rename(p), rename(g))
     case Diamond(p, g)   => Diamond(rename(p), rename(g))
+
+    //Refinement calculus
+    case Refinement(a,b) => Refinement(rename(a), rename(b))
+    case ProgramEquiv(a,b) => Refinement(rename(a), rename(b))
   }
 
   private def rename(program: Program): Program = program match {
