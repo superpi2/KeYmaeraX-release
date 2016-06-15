@@ -49,6 +49,7 @@ private[core] object AxiomBase {
     // Sort of predicational is really (Real->Bool)->Bool except sort system doesn't know that type.
     val context = Function("ctx_", None, Bool, Bool) // predicational symbol
     val programPredicateContext = Function("ctxp_", None, Trafo, Bool)
+    val programContext = Function("ctxpe_", None, Trafo, Trafo)
     val a = ProgramConst("a_")
     val b = ProgramConst("b_")
 
@@ -83,7 +84,7 @@ private[core] object AxiomBase {
           Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(Equiv(PredicationalOf(context, pany), PredicationalOf(context, qany)))))),
 
       /**
-        * Rule "CP program congruence"
+        * Rule "CP program congruence" @todo better names
         * Premise a == b
         * Conclusion ctxP_(a) <-> ctxP_(b)
         */
@@ -91,6 +92,15 @@ private[core] object AxiomBase {
         (immutable.IndexedSeq(
           Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(ProgramEquiv(a, b)))),
           Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(Equiv(ProgramPredicateOf(programPredicateContext, a), ProgramPredicateOf(programPredicateContext, b)))) )),
+      /**
+        * Rule "CPE program equivalence" @todo better names
+        * Premise a == b
+        * Conclusion ctxPE_(a) == ctxPE_(b)
+        */
+      ("CPE program equivalence",
+        (immutable.IndexedSeq(
+          Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(ProgramEquiv(a, b)))),
+          Sequent(immutable.IndexedSeq(), immutable.IndexedSeq(ProgramEquiv(ProgramOf(programContext, a), ProgramOf(programContext, b)))) )),
       /**
        * Rule "<> monotone".
        * Premise p(??) ==> q(??)
@@ -498,8 +508,16 @@ Axiom "refine choice comm".
   {a; ++ b;} == {b; ++ a;}
 End.
 
+Axiom "compose id right".
+  {a; ?true;} == {a;}
+End.
+
 Axiom "refine id".
   a; =< a;
+End.
+
+Axiom "refine equiv refl".
+  a; == a;
 End.
 
 Axiom "refine antisym".
