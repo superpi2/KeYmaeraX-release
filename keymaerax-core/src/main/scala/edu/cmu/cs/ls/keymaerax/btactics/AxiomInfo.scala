@@ -662,13 +662,19 @@ object DerivationInfo {
 
     new CoreAxiomInfo("refine choice comm", ("≤∪ comm", "refineChoiceComm"), "refineChoiceComm", {case () => RefinementCalculus.refineChoiceComm}),
     new CoreAxiomInfo("refine id", ("≤ identity", "refineId"), "refineId", {case () => RefinementCalculus.refineId}),
+    new CoreAxiomInfo("compose id right", ("≤ compose id right", "composeIdR"), "composeIdR", {case () => RefinementCalculus.composeIdR}),
+    new CoreAxiomInfo("refine equiv refl", ("≤ refine equiv refl", "refineEquivRefl"), "refineEquivRefl", {case () => RefinementCalculus.refineEquivRefl}),
 
     new CoreAxiomInfo("refine antisym", ("≤ antisym", "refineAntisym"), "refineAntisym", {case () => RefinementCalculus.refineAntisym}),
     new CoreAxiomInfo("refine unloop", ("≤ unloop", "refineUnloop"), "refineUnloop", {case () => RefinementCalculus.refineUnloop}),
     new CoreAxiomInfo("refine (;)", ("≤ (;)", "refineCompose"), "refineCompose", {case () => RefinementCalculus.refineCompose}),
     new CoreAxiomInfo("refine :=*", ("≤ :=*", "refineAssignAny"), "refineAssignAny", {case () => RefinementCalculus.refineAssignAny}),
 
-    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.refineAntisym}) //@todo add boxRefine w/ arg.
+    new CoreAxiomInfo("[=<]", ("[≤]", "[=<]"), "boxRefineAxiom", {case () => RefinementCalculus.refineAntisym}), //@todo add boxRefine w/ arg.
+
+
+    //Refinement tactics that aren't axioms
+    new TacticInfo("refineTrivialCloser", "≤ trivial closer", {case () => RefinementCalculus.refineTrivialCloser})
   ) ensuring(consistentInfo _, "meta-information on AxiomInfo is consistent with actual (derived) axioms etc.")
 
   private def consistentInfo(list: List[DerivationInfo]): Boolean = {

@@ -66,11 +66,11 @@ object RefinementCalculus {
 
   //region Idempotent Semiring axioms for proving refinements
 
-  /** Attempts to automatically prove that a =< b by applying idempotent semiring axioms.
-    *
-    * @todo come up with a good tactic modulo odes(/loops?) based on a KAT DP?
-    */
-  lazy val proveRefinement: DependentPositionTactic = ???
+//  /** Attempts to automatically prove that a =< b by applying idempotent semiring axioms.
+//    *
+//    * @todo come up with a good tactic modulo odes(/loops?) based on a KAT DP?
+//    */
+//  lazy val proveRefinement: DependentPositionTactic = ???
 
   /**
     * Proves
@@ -81,6 +81,15 @@ object RefinementCalculus {
   lazy val refineId : BelleExpr = "refineId" by HilbertCalculus.byUS("refine id")
 
   /**
+    * {{{
+    *   a; == a;
+    * }}}
+    */
+  lazy val refineEquivRefl : BelleExpr = "refineEquivRefl" by HilbertCalculus.byUS("refine equiv refl")
+
+  lazy val refineTrivialCloser : BelleExpr = "refineTrivialCloser" by (refineId | refineEquivRefl)
+
+  /**
     * Proves
     * {{{
     *   {a; ++ b;} == {b; ++ a;}
@@ -88,6 +97,14 @@ object RefinementCalculus {
     */
   lazy val refineChoiceComm : BelleExpr = "refineChoiceComm" by HilbertCalculus.byUS("refine choice comm")
   //@todo add a tactic that rewrites {a; ++ b;} to {b; ++ a;} in a context.
+
+
+  /**
+    * {{{
+    *   a; ?true; == a;
+    * }}}
+    */
+  lazy val composeIdR : BelleExpr = "composeIdR" by HilbertCalculus.byUS("refine id right")
 
   //endregion
 
@@ -198,9 +215,22 @@ object RefinementCalculus {
 
   //endregion
 
-  //region Contextual rewriting @note maybe these should be moved into UnifyUSCalculus
+  //region Contextual rewriting
 
   def CP(inExpr: PosInExpr) = HilbertCalculus.CP(inExpr)
+
+  /**
+    * {{{
+    *            *
+    *   ----------------------
+    *          a == b                    C{b}
+    *   ----------------------    --------------------
+    *       C{a} == C{b}          C{a} == C{b} |- C{a}
+    *   ----------------------------------------------------
+    *                  |- C{a}
+    * }}}
+    */
+  def contextualProgramEquiv = HilbertCalculus
 
   //endregion
 
