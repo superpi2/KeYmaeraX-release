@@ -392,10 +392,10 @@ object KeYmaeraXParser extends Parser {
         if (followsFormula(la)) reduce(st, 4, ProgramPredicateOf(Function(name, idx, Trafo, Bool), p), r)
         else error(st, List(FOLLOWSFORMULA))
 
-      // program predicational symbols
+      // program equivalence symbols
       case r :+ Token(IDENT(name,idx),_) :+ (optok@Token(LPAREN,_)) :+ Expr(p:Program) :+ Token(RPAREN,_) =>
-        if (followsFormula(la)) reduce(st, 4, ProgramOf(Function(name, idx, Trafo, Trafo), p), r)
-        else error(st, List(FOLLOWSFORMULA))
+        if (followsFormula(la) || followsProgram(la)) reduce(st, 4, ProgramOf(Function(name, idx, Trafo, Trafo), p), r)
+        else error(st, List(FOLLOWSFORMULA, FOLLOWSPROGRAM))
 
       case r :+ Token(tok:IDENT,_) :+ Token(LPAREN,_) =>
         assert(isNoQuantifier(r), "Quantifier stack items handled above")
@@ -806,7 +806,8 @@ object KeYmaeraXParser extends Parser {
     la==EOF ||
     la==DUAL ||              // from P in hybrid games
     la==INVARIANT ||            // extra: additional @annotations
-    la==REFINES || la == REFINE_EQUIV
+    la==REFINES || la == REFINE_EQUIV ||
+    la==RPAREN //as in ctxpe_(a;>>)<<
 
   /** Follow(kind(expr)): Can la follow an expression of the kind of expr? */
   private def followsExpression(expr: Expression, la: Terminal): Boolean = expr match {
@@ -818,6 +819,7 @@ object KeYmaeraXParser extends Parser {
     case Equal(_:DifferentialSymbol, _) => followsFormula(la) || /*if elaborated to ODE*/ followsProgram(la)
     case f: Formula => followsFormula(la) || elaboratable(TermKind, f)!=None && followsTerm(la)
     case r: Refinement => true
+    case pe: ProgramEquiv => true
     case _: Program => followsProgram(la)
     case _ => ???
   }
