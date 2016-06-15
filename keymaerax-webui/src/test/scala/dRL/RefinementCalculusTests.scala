@@ -158,8 +158,6 @@ class RefinementCalculusTests extends TacticTestBase {
 
   "Paper example 2" should "prove using the proof from the paper" in {withMathematica(implicit qeTool => {
     val f = "{a; x:=t; b;}* =< {a; x:=*; b;}*".asFormula
-    //@todo a generic way of saying "apply this always on the final subgoal, and just let the other guys accumulate if they don't prove automatically using blah" would be nice.
-    //@todo also nice: try proving using blah always. If it doesn't work out let it accumulate and move on.
     val t = RefinementCalculus.refineUnloopRule('R) & TactixLibrary.G & RefinementCalculus.refineComposeRule('R) <(
       HilbertCalculus.byUS("refine id") & DebuggingTactics.assertProved,
       TactixLibrary.G & RefinementCalculus.refineComposeRule('R) <(

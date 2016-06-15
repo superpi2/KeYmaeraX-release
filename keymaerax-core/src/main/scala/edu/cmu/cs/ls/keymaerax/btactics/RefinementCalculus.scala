@@ -160,24 +160,6 @@ object RefinementCalculus {
   })
 
   lazy val refineAssignAny = HilbertCalculus.byUS("refine :=*") //@todo wht about in context? CB basically?
-//  lazy val refineNondetAssignRule  : DependentPositionTactic = "refineComposeRule" by((pos: Position, s: Sequent) => {
-//    import Augmentors._
-//    val axiom = AxiomInfo.ofCodeName("refineAssignAny")
-//
-//    val (x1, t, x2) = axiom.formula match {
-//      case Refinement(Compose(x1,t),AssignAny(x2)) => (x1, t, x2)
-//      case _ => throw new Exception(s"Expected axiom of form a1;b1;=<a2;b2; -> ... but found ${axiom.formula}")
-//    }
-//
-//    val (x1Repl, tRepl, x2Repl) = s(pos) match {
-//      case Refinement(Compose(xq,t),AssignAny(x2)) => (x1, t, x2)
-//      case _ => throw new Exception(s"Expected program refinement formula but found ${s(pos).prettyString}")
-//    }
-//
-//    val axiomInstance = USubst(x1 ~> x1Repl :: x2 ~> x2Repl :: t ~> tRepl :: Nil)(axiom.provable)
-//
-//    HilbertCalculus.CEat(axiomInstance)(pos)
-//  })
 
   //endregion
 
