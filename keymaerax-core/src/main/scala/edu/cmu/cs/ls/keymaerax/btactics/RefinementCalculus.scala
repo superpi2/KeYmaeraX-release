@@ -52,7 +52,7 @@ object RefinementCalculus {
      *                      |- [a]p
      *
      * See Slide 10 of http://nfulton.org/slides/cpp16.pdf
-     * @todo pretty sure we have a better way of doing this but can't find it using grep ATM.
+     * @todo CE/CEat instead?
      * @note It might be a better idea to *not* split the conjunction so that the subgoal's position is stable wrt [a]p.
      *       This is only relevant, however, if we allow this tactic to be used in context.
      */
