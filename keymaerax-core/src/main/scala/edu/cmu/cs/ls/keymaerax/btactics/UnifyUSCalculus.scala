@@ -599,14 +599,26 @@ trait UnifyUSCalculus {
     * Part of the differential dynamic logic Hilbert calculus.
     *
     * @param inEqPos the position *within* the two sides of the equivalence at which the context DotFormula occurs.*/
-  def CP(inEqPos: PosInExpr) : DependentTactic = new SingleGoalDependentTactic("CP program congruence") {
+  def CP(inEqPos: PosInExpr) : DependentTactic = new SingleGoalDependentTactic("CP") {
     private val a_ = ProgramConst("a_")
     private val b_ = ProgramConst("b_")
     private val ctxp_ = ProgramPredicateOf(Function("ctxp_", None, Trafo, Bool), DotProgram)
+    private val ctxpe_ = ProgramOf(Function("ctxpe_", None, Trafo, Trafo), DotProgram)
 
     override def computeExpr(sequent: Sequent): BelleExpr = {
       require(sequent.ante.isEmpty && sequent.succ.length==1, "Expected empty antecedent and single succedent formula, but got " + sequent)
       sequent.succ.head match {
+        case ProgramEquiv(l,r) => {
+          if(inEqPos == HereP) ident
+          else {
+            val (ctxA, a) = l.at(inEqPos)
+            val (ctxB, b) = r.at(inEqPos)
+            require(ctxA == ctxB, "Same context expected, but got " + ctxA + " and " + ctxB)
+            require(ctxA.ctx == ctxA.ctx, "Same context formula expected, but got " + ctxA.ctx + " and " + ctxB.ctx)
+            require(ctxA.isProgramContext, s"Program context expected for CP, but found ${ctxA.ctx}")
+            by("CPE program equivalence", USubst(SubstitutionPair(a_, a) :: SubstitutionPair(b_, b) :: SubstitutionPair(ctxpe_, ctxA.ctx) :: Nil))
+          }
+        }
         case Equiv(l ,r) => {
           if(inEqPos == HereP) ident
           else {
