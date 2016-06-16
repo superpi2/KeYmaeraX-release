@@ -104,7 +104,7 @@ object RefinementCalculus {
     *   a; ?true; == a;
     * }}}
     */
-  lazy val composeIdR : BelleExpr = "composeIdR" by HilbertCalculus.byUS("refine id right")
+  lazy val composeIdR : BelleExpr = "composeIdR" by HilbertCalculus.byUS("compose id right")
 
   //endregion
 
@@ -217,6 +217,16 @@ object RefinementCalculus {
 
   //region Contextual rewriting
 
+  /**
+    * CP(pos) at the indicated position within an equivalence reduces contextual equivalence `C{left}<->C{right}`to argument program equivalence `left == right`.
+    * {{{
+    *       a == b
+    *   --------------- CP
+    *    C{a} <-> C{b}
+    * }}}
+    * Part of the differential dynamic logic Hilbert calculus.
+    *
+    * @param inExpr the position *within* the two sides of the equivalence at which the context DotProgram occurs.*/
   def CP(inExpr: PosInExpr) = HilbertCalculus.CP(inExpr)
 
   /**
@@ -230,7 +240,48 @@ object RefinementCalculus {
     *                  |- C{a}
     * }}}
     */
-  def contextualProgramEquiv = HilbertCalculus
+  def contextualProgramEquiv = ??? //@todo
+
+  /**
+    * Simplifies a sequent by rewriting a program at a given sub-position in a sequent.
+    * I.e., rewrites
+    *     G |- D, ctx{a}, D'
+    * into
+    *     G |- D, D', ctx{b}
+    * where equiv is a proof of a == b. @todo fix positioning awkwardness.
+    *
+    * Ex:
+    * {{{
+    *      *
+    *   -------- equiv        -------
+    *     a==b                 [b;]p
+    *   ----------------    -------------------------
+    *   [a;]p <-> [b;]p     [a;]p <-> [b;]p |- [a;]p
+    *   ----------------------------------------------
+    *   [a;]p
+    * }}}
+    * @note untested for rules with extra antecedented or succedents.
+    *
+    * @param equiv The tactic that will prove a==b
+    */
+  def useEquivAt(equiv: BelleExpr, b: Program) = s"programEquivAt('${equiv.prettyString}', {`${b.prettyString}`})" by((pos: Position, s: Sequent) => {
+//    assert(s.ante.length == 0 && s.succ.length == 1, "Expected sequent of form |- G but.")
+
+    import Augmentors._
+    val (ctx, a) = s.at(pos)
+    TactixLibrary.cut(Equiv(ctx(a), ctx(b))) <(
+      TactixLibrary.equivL('L) <(
+        TactixLibrary.andL('Llast) & TactixLibrary.close & DebuggingTactics.assertProved,
+        PartialTactic(
+          TactixLibrary.andL('Llast) &        // !p & !q |- D, p, D'
+          TactixLibrary.hideR(pos.topLevel) & // !p & !q |- D, D'
+          TactixLibrary.notL('Llast) &        // !p      |- D, D', q //@todo fix placement so that q takes place of p.
+          TactixLibrary.hideL('Llast) &       //         |- D, D', q
+          DebuggingTactics.assert(s => s.succ.last == ctx(b), "Remaining goal should be exaclty ctx(b)"))
+      ) partial,
+      TactixLibrary.cohide('Rlast) & CP(pos.inExpr) & equiv & DebuggingTactics.assertProved
+    ) partial
+  })
 
   //endregion
 
