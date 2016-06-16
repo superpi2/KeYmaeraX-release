@@ -220,6 +220,9 @@ object ExpressionTraversal {
         case Forall(v, a) => matchOne(p, Forall(v, _: Formula), f, a)
         case Exists(v, a) => matchOne(p, Exists(v, _: Formula), f, a)
         case DifferentialFormula(a) => matchOne(p, DifferentialFormula.apply, f, a)
+        case Refinement(a,b) => matchTwo(p, Refinement.apply(_:Program,_:Program), f, a, b)
+        case ProgramEquiv(a,b) => matchTwo(p, Refinement.apply(_:Program,_:Program), f, a, b)
+        case ProgramPredicateOf(fn,a) => matchOne(p, ProgramPredicateOf.apply(fn, _:Program), f, a)
 
         // Terms
         case Number(_) => matchZero(p, f, e)
@@ -252,6 +255,7 @@ object ExpressionTraversal {
         case AtomicODE(x, t) => matchTwo(p, AtomicODE.apply, f, x, t)
         case DifferentialProduct(a, b) => matchTwo(p, DifferentialProduct.apply, f, a, b)
         case ODESystem(a, h) => matchTwo(p, ODESystem(_: DifferentialProgram, _: Formula), f, a, h)
+        case ProgramOf(fn, a) => matchOne(p, ProgramOf.apply(fn, _:Program), f, a) //@todo not so sure about this.
 
         case _ => failFTPG(e)
       }) match {
