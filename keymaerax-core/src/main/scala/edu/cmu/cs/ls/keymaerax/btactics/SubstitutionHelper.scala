@@ -88,6 +88,9 @@ class SubstitutionHelper(what: Term, repl: Term) {
     case LessEqual(l, r) => LessEqual(usubst(o, u, l), usubst(o, u, r))
     case Less(l, r) => Less(usubst(o, u, l), usubst(o, u, r))
 
+    case Refinement(a,b) => Refinement(usubst(o,u,a).p, usubst(o,u,b).p)
+    case ProgramEquiv(a,b) => ProgramEquiv(usubst(o,u,a).p, usubst(o,u,b).p)
+
     // binding cases add bound variables to u
     case Forall(vars, g) => Forall(vars, usubst(o ++ vars, u ++ vars, g))
     case Exists(vars, g) => Exists(vars, usubst(o ++ vars, u ++ vars, g))
@@ -97,12 +100,14 @@ class SubstitutionHelper(what: Term, repl: Term) {
 
     // uniform substitution base cases
     case PredOf(fn, theta) => PredOf(fn, usubst(o, u, theta))
+    case ProgramPredicateOf(fn, p) => ProgramPredicateOf(fn, usubst(o,u,p).p) //@todo probably not correct. Actually, why doesn't predof check that fn isn't in the o,u set?
     case DifferentialFormula(g) => DifferentialFormula(usubst(o, u, g))
     case x: Atomic => x
     case _ => throw new UnknownOperatorException("Not implemented yet", f)
   }
 
   private def usubst(o: SetLattice[NamedSymbol], u: SetLattice[NamedSymbol], p: Program): USR = p match {
+    case ProgramOf(fn, a) => USR(o,u,ProgramOf(fn, usubst(o,u,a).p))//@todo probably not correct.
     case Assign(x, e) => USR(o+x, u+x, Assign(x, usubst(o, u, e)))
     case DiffAssign(d@DifferentialSymbol(x), e) => USR(o+x, u+x, DiffAssign(d, usubst(o, u, e)))
     case AssignAny(x) => USR(o+x, u+x, p)
