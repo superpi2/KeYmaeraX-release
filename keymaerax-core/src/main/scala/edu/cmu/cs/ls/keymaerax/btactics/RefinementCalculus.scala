@@ -207,6 +207,34 @@ object RefinementCalculus {
 
   lazy val refineAssignAny = HilbertCalculus.byUS("refine :=*") //@todo wht about in context? CB basically?
 
+  lazy val refineTest : BelleExpr = "refineTest" by HilbertCalculus.byUS("refine (?)")
+
+  /**
+    * {{{
+    *  G |- p->q, D
+    * -------------------
+    *  G |- ?p =< ?q, D
+    * }}}
+    */
+  lazy val refineTestRule : DependentPositionTactic = "refineTestRule" by((pos: Position, s: Sequent) => {
+    import Augmentors._
+    val axiom = AxiomInfo.ofCodeName("refineTest")
+
+    val (p,q) = axiom.formula match {
+      case Imply(_, Refinement(Test(p), Test(q))) => (p,q)
+      case _ => throw new Exception(s"Expected axiom of form ?p =< ?q; <- ... but found ${axiom.formula}")
+    }
+
+    val (pRepl, qRepl) = s(pos) match {
+      case Refinement(Test(pRepl),Test(qRepl)) => (pRepl, qRepl)
+      case _ => throw new Exception(s"Expected program refinement formula but found ${s(pos).prettyString}")
+    }
+
+    val axiomInstance = USubst(p ~> pRepl :: q ~> qRepl :: Nil)(axiom.provable)
+
+    HilbertCalculus.CEat(axiomInstance)(pos)
+  })
+
   //endregion
 
 
@@ -319,7 +347,7 @@ object RefinementCalculus {
     *   a<->b |- a
     * }}}
     */
-  private lazy val rewriteByEquiv = "rewriteByEquiv" by ((equivPos: Position, s: Sequent) => {
+   lazy val rewriteByEquiv = "rewriteByEquiv" by ((equivPos: Position, s: Sequent) => {
     import Augmentors._
     val Equiv(l,r) = s(equivPos)
     val idx = s.succ.indexOf(l)

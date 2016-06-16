@@ -536,6 +536,10 @@ Axiom "refine (;)".
   {a1;b1;} =< {a2;b2;} <- ( a1; =< a2; & [a1;](b1; =< b2;) )
 End.
 
+Axiom "refine (?)".
+  {?p(??);} =< {?q(??);} <- (p(??) -> q(??))
+End.
+
 Axiom "refine :=*".
    x:=t; =< x:=*;
 End.
