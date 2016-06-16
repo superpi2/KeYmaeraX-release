@@ -664,6 +664,7 @@ object DerivationInfo {
     new CoreAxiomInfo("refine id", ("≤ identity", "refineId"), "refineId", {case () => RefinementCalculus.refineId}),
     new CoreAxiomInfo("compose id right", ("≤ compose id right", "composeIdR"), "composeIdR", {case () => RefinementCalculus.composeIdR}),
     new CoreAxiomInfo("refine equiv refl", ("≤ refine equiv refl", "refineEquivRefl"), "refineEquivRefl", {case () => RefinementCalculus.refineEquivRefl}),
+    new CoreAxiomInfo("program equiv comm", ("≤ program equiv comm", "programEquivComm"), "programEquivComm", {case () => RefinementCalculus.programEquivComm}),
 
     new CoreAxiomInfo("refine antisym", ("≤ antisym", "refineAntisym"), "refineAntisym", {case () => RefinementCalculus.refineAntisym}),
     new CoreAxiomInfo("refine unloop", ("≤ unloop", "refineUnloop"), "refineUnloop", {case () => RefinementCalculus.refineUnloop}),

@@ -520,6 +520,10 @@ Axiom "refine equiv refl".
   a; == a;
 End.
 
+Axiom "program equiv comm".
+  (a; == b;) <-> (b; == a;)
+End.
+
 Axiom "refine antisym".
   a; == b; <- ( (a; =< b;) & (b; =< a;) )
 End.

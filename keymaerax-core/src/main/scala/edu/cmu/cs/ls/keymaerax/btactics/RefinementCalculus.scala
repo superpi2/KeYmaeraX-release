@@ -98,6 +98,7 @@ object RefinementCalculus {
   lazy val refineChoiceComm : BelleExpr = "refineChoiceComm" by HilbertCalculus.byUS("refine choice comm")
   //@todo add a tactic that rewrites {a; ++ b;} to {b; ++ a;} in a context.
 
+  lazy val programEquivComm : BelleExpr = "programEquivComm" by HilbertCalculus.byUS("program equiv comm")
 
   /**
     * {{{
@@ -105,6 +106,13 @@ object RefinementCalculus {
     * }}}
     */
   lazy val composeIdR : BelleExpr = "composeIdR" by HilbertCalculus.byUS("compose id right")
+
+  /**
+    * {{{
+    *   a; == a; ?true;
+    * }}}
+    */
+  lazy val composeIdRi : BelleExpr = "composeIdRi" by programEquivComm & composeIdR
 
   //endregion
 
@@ -272,19 +280,42 @@ object RefinementCalculus {
     import Augmentors._
     val (ctx, a) = s.at(pos)
     TactixLibrary.cut(Equiv(ctx(a), ctx(b))) <(
-      TactixLibrary.equivL('L) <(
-        TactixLibrary.andL('Llast) & TactixLibrary.close & DebuggingTactics.assertProved,
-        PartialTactic(
-          TactixLibrary.andL('Llast) &        // !p & !q |- D, p, D'
-          TactixLibrary.hideR(pos.topLevel) & // !p & !q |- D, D'
-          TactixLibrary.notL('Llast) &        // !p      |- D, D', q //@todo fix placement so that q takes place of p.
-          TactixLibrary.hideL('Llast) &       //         |- D, D', q
-          DebuggingTactics.assert(s => s.succ.last == ctx(b), "Remaining goal should be exaclty ctx(b)"))
-      ) partial,
+      rewriteByEquiv('Llast) & DebuggingTactics.assert(s => s.succ.last == ctx(b), "Remaining goal should be exaclty ctx(b)") partial,
       TactixLibrary.cohide('Rlast) & CP(pos.inExpr) & equiv & DebuggingTactics.assertProved
     ) partial
   })
 
+  /**
+    * {{{
+    *                 |- b
+    *             --------------
+    *              !a |- a, b
+    *             --------------
+    *    *         !a, !b |- a
+    * --------    --------------
+    * a&b |- a    !a&!b   |- a
+    * ----------------
+    *   a<->b |- a
+    * }}}
+    */
+  private lazy val rewriteByEquiv = "rewriteByEquiv" by ((equivPos: Position, s: Sequent) => {
+    import Augmentors._
+    val Equiv(l,r) = s(equivPos)
+    val idx = s.succ.indexOf(l)
+    assert(idx != -1, s"${l} should exist in succedent of ${s}")
+    val succPos = SuccPos(idx)
+    assert(s.at(succPos)._2 == l, s"Expected ${l} at ${succPos} but found ${s.at(succPos)}")
+
+    TactixLibrary.equivL(equivPos) <(
+      TactixLibrary.andL(equivPos) & TactixLibrary.close & DebuggingTactics.assertProved,
+      PartialTactic(
+        TactixLibrary.andL(equivPos) & // !p & !q |- D, p, D'
+        TactixLibrary.hideR(succPos) & // !p & !q |- D, D'
+        TactixLibrary.notL('Llast) &   // !p      |- D, D', q //@todo fix placement so that q takes place of p.
+        TactixLibrary.hideL(equivPos)  //         |- D, D', q
+      )
+    ) partial
+  })
   //endregion
 
 }
