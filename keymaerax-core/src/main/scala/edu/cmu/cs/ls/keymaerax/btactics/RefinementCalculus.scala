@@ -87,6 +87,7 @@ object RefinementCalculus {
     */
   lazy val refineEquivRefl : BelleExpr = "refineEquivRefl" by HilbertCalculus.byUS("refine equiv refl")
 
+  /** proves trivial refinements and program equivalences. */
   lazy val refineTrivialCloser : BelleExpr = "refineTrivialCloser" by (refineId | refineEquivRefl)
 
   /**
@@ -111,8 +112,21 @@ object RefinementCalculus {
     * {{{
     *   a; == a; ?true;
     * }}}
+    * @note derived from composeIdR and programEquivComm
     */
-  lazy val composeIdRi : BelleExpr = "composeIdRi" by programEquivComm & composeIdR
+  lazy val composeIdRi : BelleExpr = "composeIdRi" by ((s: Sequent) => {
+    import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
+    import Augmentors._
+
+    //Compute US instance of equivalence we'll use.
+    val ProgramEquiv(a, _) = s.succ(0)
+    val cutF = USubst("a;".asProgram ~> a :: Nil)("(a; == {a; ?true;}) <-> ({a; ?true;} == a;)".asFormula)
+
+    TactixLibrary.cut(cutF) <(
+      rewriteByEquiv('L) & composeIdR,
+      TactixLibrary.cohide('Rlast) & programEquivComm
+    )
+  })
 
   //endregion
 

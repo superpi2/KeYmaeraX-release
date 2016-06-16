@@ -200,14 +200,12 @@ class RefinementCalculusTests extends TacticTestBase {
   "paper example 3" should "proof using the proof from the paper" in {
     val f = "p(t) -> (x:=t; =< {x:=*;?p(x);})".asFormula
     import Augmentors._
-    println("({x:=t;?true;} =< {x:=*;?p(x);})".asFormula.at(PosInExpr(1::Nil))._1.apply("a".asProgram))
-    val t = TactixLibrary.implyR('R) & HilbertCalculus.useAt("composeIdR")
-//    val t = TactixLibrary.implyR('R) & TactixLibrary.cut("({x:=t;?true;} =< {x:=*;?p(x);}) <-> (x:=t; =< {x:=*;?p(x);})".asFormula) <(
-//      Idioms.nil,
-//      TactixLibrary.cohide('Rlast) & DebuggingTactics.debug("here", true) & RefinementCalculus.CP(PosInExpr(1 :: Nil))
-//    )
+    println("({x:=t;?true;} =< {x:=*;?p(x);})".asFormula.at(PosInExpr(0::Nil))._1.apply("a".asProgram))
+    val t =
+      TactixLibrary.implyR('R) &
+      RefinementCalculus.useEquivAt(RefinementCalculus.composeIdRi, "x:=t;?true;".asProgram)(SuccPosition(1, 0::Nil))
 
     val result = proveBy(f,t)
-//    result shouldBe 'proved
+    println(result.prettyString)
   }
 }
