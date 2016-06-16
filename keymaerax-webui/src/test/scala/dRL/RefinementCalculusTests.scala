@@ -5,9 +5,9 @@
 
 package dRL
 
-import edu.cmu.cs.ls.keymaerax.bellerophon.PosInExpr
+import edu.cmu.cs.ls.keymaerax.bellerophon.{PosInExpr, SuccPosition}
 import edu.cmu.cs.ls.keymaerax.btactics.{RefinementCalculus, _}
-import edu.cmu.cs.ls.keymaerax.core.{Provable, Sequent}
+import edu.cmu.cs.ls.keymaerax.core.{ProgramConst, Provable, Sequent}
 import edu.cmu.cs.ls.keymaerax.parser.StringConverter._
 
 import scala.collection.immutable
@@ -71,6 +71,18 @@ class RefinementCalculusTests extends TacticTestBase {
     formula.at(PosInExpr(0 :: 1 :: Nil))._2 shouldBe "a;".asProgram
     val tactic = RefinementCalculus.CP(PosInExpr(0 :: 1 :: Nil)) & RefinementCalculus.refineTrivialCloser & DebuggingTactics.assertProved
     proveBy(formula, tactic) shouldBe 'proved
+  }
+
+  "useEquivAt" should "work" in {
+    val formula = "q() -> [x:=1; ?true;]p()".asFormula
+    val t = RefinementCalculus.useEquivAt(RefinementCalculus.composeIdR, "x:=1;".asProgram)(SuccPosition(1, 1 :: 0 :: Nil))
+
+    val result = proveBy(formula, t)
+    result.subgoals.length shouldBe 1
+    result.subgoals(0).ante.length shouldBe 0
+    result.subgoals(0).succ.length shouldBe 1
+
+    result.subgoals(0).succ(0) shouldBe "q() -> [x:=1;]p()".asFormula
   }
 
   "refine antisym" should "prove itself" in {
@@ -187,6 +199,15 @@ class RefinementCalculusTests extends TacticTestBase {
 
   "paper example 3" should "proof using the proof from the paper" in {
     val f = "p(t) -> (x:=t; =< {x:=*;?p(x);})".asFormula
-//    val t = TactixLibrary.implyR('R) & RefinementCalculus.composeIdR
+    import Augmentors._
+    println("({x:=t;?true;} =< {x:=*;?p(x);})".asFormula.at(PosInExpr(1::Nil))._1.apply("a".asProgram))
+    val t = TactixLibrary.implyR('R) & HilbertCalculus.useAt("composeIdR")
+//    val t = TactixLibrary.implyR('R) & TactixLibrary.cut("({x:=t;?true;} =< {x:=*;?p(x);}) <-> (x:=t; =< {x:=*;?p(x);})".asFormula) <(
+//      Idioms.nil,
+//      TactixLibrary.cohide('Rlast) & DebuggingTactics.debug("here", true) & RefinementCalculus.CP(PosInExpr(1 :: Nil))
+//    )
+
+    val result = proveBy(f,t)
+//    result shouldBe 'proved
   }
 }
