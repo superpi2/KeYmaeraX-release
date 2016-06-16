@@ -179,6 +179,13 @@ object RefinementCalculus {
   })
 
   lazy val refineCompose : BelleExpr = "refineCompose" by HilbertCalculus.byUS("refine (;)")
+  /**
+    * {{{
+    *  G |- a1; =< a2;, D     G |- [a1;](b1; <= b2;)
+    * ----------------------------------------------
+    *   G |- a1;b1 =< a2;b2;, D
+    * }}}
+    */
   lazy val refineComposeRule : DependentPositionTactic = "refineComposeRule" by((pos: Position, s: Sequent) => {
     import Augmentors._
     val axiom = AxiomInfo.ofCodeName("refineCompose")
