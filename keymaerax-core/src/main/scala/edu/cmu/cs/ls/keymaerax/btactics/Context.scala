@@ -339,10 +339,10 @@ object Context {
     case PredicationalOf(c,t) if pos.head==0 => PredicationalOf(c, replaceAt(t, pos.child, repl))
 
     case ProgramPredicateOf(f,a) if pos.head == 0 => ProgramPredicateOf(f, replaceAt(a, pos.child, repl))
-    case Refinement(a,b) if pos.head == 0 => Refinement(a, replaceAt(b, pos.child, repl))
-    case Refinement(a,b) if pos.head == 1 => Refinement(replaceAt(a, pos.child, repl), b)
-    case ProgramEquiv(a,b) if pos.head == 0 => ProgramEquiv(a, replaceAt(b, pos.child, repl))
-    case ProgramEquiv(a,b) if pos.head == 1 => ProgramEquiv(replaceAt(a, pos.child, repl), b)
+    case Refinement(a,b) if pos.head == 1 => Refinement(a, replaceAt(b, pos.child, repl))
+    case Refinement(a,b) if pos.head == 0 => Refinement(replaceAt(a, pos.child, repl), b)
+    case ProgramEquiv(a,b) if pos.head == 1 => ProgramEquiv(a, replaceAt(b, pos.child, repl))
+    case ProgramEquiv(a,b) if pos.head == 0 => ProgramEquiv(replaceAt(a, pos.child, repl), b)
 
     // pseudo-homomorphic cases
     case f:ComparisonFormula  if pos.head==0 => f.reapply(replaceAt(f.left, pos.child, repl), f.right)
