@@ -203,8 +203,11 @@ class RefinementCalculusTests extends TacticTestBase {
     println("({x:=t;?true;} =< {x:=*;?p(x);})".asFormula.at(PosInExpr(0::Nil))._1.apply("a".asProgram))
     val t =
       TactixLibrary.implyR('R) &
-      RefinementCalculus.useEquivAt(RefinementCalculus.composeIdRi, "x:=t;?true;".asProgram)(SuccPosition(1, 0::Nil))
-
+      RefinementCalculus.useEquivAt(RefinementCalculus.composeIdRi, "x:=t;?true;".asProgram)(SuccPosition(1, 0::Nil)) &
+      RefinementCalculus.refineComposeRule('R) <(
+        TactixLibrary.cohide('Rlast) & RefinementCalculus.refineAssignAny & DebuggingTactics.assertProved,
+        TactixLibrary.assignb('R) & DebuggingTactics.debug("asdf", true)
+      )
     val result = proveBy(f,t)
     println(result.prettyString)
   }
