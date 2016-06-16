@@ -249,6 +249,8 @@ object RefinementCalculus {
     * into
     *     G |- D, D', ctx{b}
     * where equiv is a proof of a == b. @todo fix positioning awkwardness.
+    * @todo Write a wrapper that finds the position automatically.
+    * @todo Bellerophon parser improvements so that unification can be used instead of position hacking.
     *
     * Ex:
     * {{{
