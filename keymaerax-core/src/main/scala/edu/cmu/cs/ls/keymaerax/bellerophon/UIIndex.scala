@@ -213,44 +213,51 @@ object UIIndex {
         if (!isTop) axioms
         else {
           // Check for expansions
-          val sig = StaticSemantics.signature(expr)
-          sig.toList.flatMap( s => s match {
-            case fn: Function if substs.exists({
-              case SubstitutionPair(FuncOf(wfn, _), _) => wfn == fn
+          expr match {
+            // top-level predicate: expand only
+            case PredOf(fn, _) if substs.exists({
               case SubstitutionPair(PredOf(wfn, _), _) => wfn == fn
-              case _ => false }) =>
-              Some(s"""expand("${fn.prettyString}")""")
-            //case (PredOf(fn, _)) if substs.exists({ case SubstitutionPair(PredOf(wfn, _), _) => wfn == fn case _ => false }) =>
-            //  Some(s"""expand("${fn.prettyString}")""")
-            case _ => None
+              case _ => false
+            }) => s"""expand("${fn.prettyString}")""" :: Nil
+            // all other formulas: append expand as an option for non-top-level function and predicate symbols
+            case _ =>
+              val sig = StaticSemantics.signature(expr)
+              ((expr, isAnte) match {
+                case (True, false) => "closeTrue" :: alwaysApplicable
+                case (False, true) => "closeFalse" :: alwaysApplicable
+                case (_: Not, true) => "notL" :: alwaysApplicable
+                case (_: Not, false) => "notR" :: alwaysApplicable
+                case (_: And, true) => axioms ++ ("andL" :: alwaysApplicable)
+                case (_: And, false) => axioms ++ ("andR" :: alwaysApplicable)
+                case (_: Or, true) => "orL" :: alwaysApplicable
+                case (_: Or, false) => "orR" :: alwaysApplicable
+                case (_: Imply, true) => axioms ++ ("implyL" :: alwaysApplicable)
+                case (_: Imply, false) => axioms ++ ("implyR" :: alwaysApplicable)
+                case (_: Equiv, true) => "equivL" :: alwaysApplicable
+                case (_: Equiv, false) => "equivR" :: alwaysApplicable
+                case (_: Forall, true) => "allL" :: "allLkeep" :: "allLmon" :: alwaysApplicable
+                case (_: Forall, false) => "allR" :: alwaysApplicable
+                case (_: Exists, true) => "existsL" :: alwaysApplicable
+                case (_: Exists, false) => "existsR" :: "existsRmon" :: alwaysApplicable
+                case (_: Equal, true) => "allL2R" :: "allR2L" :: "= commute" :: "alphaRenAllBy" :: alwaysApplicable
+                // Suggest diffUnfolding for atomic comparisons if there is an interpreted function
+                case (f: ComparisonFormula, false) =>
+                  if (StaticSemantics.signature(f).exists({
+                    case ee: Function => ee.interpreted
+                    case _ => false
+                  })) "diffUnfold" :: alwaysApplicable
+                  else alwaysApplicable
+                case _ => alwaysApplicable
+              }) ++ sig.toList.flatMap({
+                case fn: Function if substs.exists({
+                  case SubstitutionPair(FuncOf(wfn, _), _) => wfn == fn
+                  case SubstitutionPair(PredOf(wfn, _), _) => wfn == fn
+                  case _ => false
+                }) =>
+                  Some(s"""expand("${fn.prettyString}")""")
+                case _ => None
+              })
           }
-          ) ++
-          ((expr, isAnte) match {
-            case (True, false) => "closeTrue" :: alwaysApplicable
-            case (False, true) => "closeFalse" :: alwaysApplicable
-            case (_: Not, true) => "notL" :: alwaysApplicable
-            case (_: Not, false) => "notR" :: alwaysApplicable
-            case (_: And, true) => axioms ++ ("andL" :: alwaysApplicable)
-            case (_: And, false) => axioms ++ ("andR" :: alwaysApplicable)
-            case (_: Or, true) => "orL" :: alwaysApplicable
-            case (_: Or, false) => "orR" :: alwaysApplicable
-            case (_: Imply, true) => axioms ++ ("implyL" :: alwaysApplicable)
-            case (_: Imply, false) => axioms ++ ("implyR" :: alwaysApplicable)
-            case (_: Equiv, true) => "equivL" :: alwaysApplicable
-            case (_: Equiv, false) => "equivR" :: alwaysApplicable
-            case (_: Forall, true) => "allL" :: "allLkeep" :: "allLmon" :: alwaysApplicable
-            case (_: Forall, false) => "allR" :: alwaysApplicable
-            case (_: Exists, true) => "existsL" :: alwaysApplicable
-            case (_: Exists, false) => "existsR" :: "existsRmon" :: alwaysApplicable
-            case (_: Equal, true) => "allL2R" :: "allR2L" :: "= commute" :: "alphaRenAllBy" :: alwaysApplicable
-            // Suggest diffUnfolding for atomic comparisons if there is an interpreted function
-            case (f:ComparisonFormula,false) =>
-              if(StaticSemantics.signature(f).exists( e => e match {
-                case ee: Function => ee.interpreted
-              })) "diffUnfold" :: alwaysApplicable
-              else alwaysApplicable
-            case _ => alwaysApplicable
-          })
         }
     }
   }).map(DerivationInfo(_))

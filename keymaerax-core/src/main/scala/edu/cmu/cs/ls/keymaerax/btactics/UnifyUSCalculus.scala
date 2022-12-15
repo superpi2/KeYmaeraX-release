@@ -515,7 +515,7 @@ trait UnifyUSCalculus {
   @Tactic(("US", "US"), codeName = "US", conclusion = "|- S(P)", premises = "|- P")
   def USX(S: List[SubstitutionPair]): InputTactic = inputanonP { (pr: ProvableSig) =>
     // add user-provided substitutions to the definitions
-    US(USubst(S))(pr).reapply(pr.defs ++ Declaration.fromSubst(S))
+    US(USubst(S))(pr).reapply(pr.defs ++ Declaration.fromSubst(S, pr.defs))
   }
 
 
@@ -1962,11 +1962,16 @@ trait UnifyUSCalculus {
           * @param o Replacement expression
           */
         def equivStep(o: Expression): ProvableSig = {
-          //@todo chase does not work with applying axioms inverse
           require(fact.isProved, "currently want proved facts as input only\n" + fact)
           require(proof.conclusion.updated(p.top, C(subst(k)))==proof.conclusion, "expected context split")
-          // |- fact: k=o or k<->o, respectively
-          val sideUS: ProvableSig = subst.toForward(fact)
+          // |- fact: k=o or k<->o, respectively; commute fact if key=1
+          val sideUS: ProvableSig = fact.conclusion.succ.head match {
+            case Equiv(l, r) =>
+              if (key == PosInExpr(0::Nil)) subst.toForward(fact)
+              else subst.toForward(fact(Sequent(IndexedSeq(), IndexedSeq(Equiv(r, l))), CommuteEquivRight(SuccPos(0))))
+            case _ => subst.toForward(fact) //@note not an equivalence axiom, cannot commute
+          }
+
           // |- subst(fact): subst(k)=subst(o) or subst(k)<->subst(o) by US
           val sideCE: ProvableSig = CE(C)(sideUS)
           //@todo could shortcut proof by using "CO one-sided congruence" instead of CE
@@ -2015,13 +2020,29 @@ trait UnifyUSCalculus {
 
         // in which context of the fact does the key occur
         K.ctx match {
-          case Equal(DotTerm(_, _), o) => equivStep(o)
+          case Equal(DotTerm(_, _), o) => fact.conclusion.succ.head match {
+            case Equal(l, r) =>
+              if (l == r) proof //@note shortcut for stutter/recursor axioms
+              else equivStep(o)
+          }
 
-          case Equal(o, DotTerm(_, _)) => equivStep(o)
+          case Equal(o, DotTerm(_, _)) => fact.conclusion.succ.head match {
+            case Equal(l, r) =>
+              if (l == r) proof //@note shortcut for stutter/recursor axioms
+              else equivStep(o)
+          }
 
-          case Equiv(DotFormula, o)    => equivStep(o)
+          case Equiv(DotFormula, o)    => fact.conclusion.succ.head match {
+            case Equiv(l, r) =>
+              if (l == r) proof //@note shortcut for stutter/recursor axioms
+              else equivStep(o)
+          }
 
-          case Equiv(o, DotFormula)    => equivStep(o)
+          case Equiv(o, DotFormula)    => fact.conclusion.succ.head match {
+            case Equiv(l, r) =>
+              if (l == r) proof //@note shortcut for stutter/recursor axioms
+              else equivStep(o)
+          }
 
 
           case Imply(o, DotFormula) =>

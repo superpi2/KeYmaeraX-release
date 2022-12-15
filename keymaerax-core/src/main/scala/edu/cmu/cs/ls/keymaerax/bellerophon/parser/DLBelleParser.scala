@@ -13,7 +13,7 @@ import edu.cmu.cs.ls.keymaerax.bellerophon._
 import edu.cmu.cs.ls.keymaerax.btactics.macros.{ArgInfo, DerivationInfo, ExpressionArg, FormulaArg, GeneratorArg, ListArg, NumberArg, OptionArg, PosInExprArg, StringArg, SubstitutionArg, TermArg, VariableArg}
 import edu.cmu.cs.ls.keymaerax.core._
 import edu.cmu.cs.ls.keymaerax.infrastruct.Augmentors.ExpressionAugmentor
-import edu.cmu.cs.ls.keymaerax.parser.{DLParser, Declaration, ParseException, Parser}
+import edu.cmu.cs.ls.keymaerax.parser.{DLParser, Declaration, ParseException, Parser, TacticReservedSymbols}
 import fastparse._
 import edu.cmu.cs.ls.keymaerax.infrastruct.PosInExpr.HereP
 import edu.cmu.cs.ls.keymaerax.infrastruct.{FormulaTools, PosInExpr, Position}
@@ -30,8 +30,11 @@ import scala.util.Try
   */
 class DLBelleParser(override val printer: BelleExpr => String,
                     tacticProvider: (String, List[Either[Seq[Any], PositionLocator]], Declaration) => BelleExpr) extends DLTacticParser {
-  /** Definitions, should be provided by the outer parser through [[setDefs]]. */
-  private var defs: Declaration = Declaration(Map.empty)
+  /** Definitions, should be provided by the outer parser through [[setDefs]]. Use [[defs]] instead to get combined outer parser and tactic reserved symbols. */
+  private var _defs: Declaration = Declaration(Map.empty)
+
+  /** Definitions, provided by outer parser plus tactic reserved symbols. */
+  private def defs: Declaration = _defs.addNew(TacticReservedSymbols.asDecl)
 
   /** Which formula/term/program parser this archive parser uses. */
   private val expParser = DLParser
@@ -51,7 +54,7 @@ class DLBelleParser(override val printer: BelleExpr => String,
 
   /** Sets the definitions to be used when parsing tactic expressions. Expected to be set
     * before [[apply]] or [[tactic]] are used. */
-  override def setDefs(defs: Declaration): Unit = this.defs = defs
+  override def setDefs(defs: Declaration): Unit = this._defs = defs
 
   /** @inheritdoc */
   override def setDefTactics(defs: Map[String, DefTactic]): Unit = {
@@ -128,7 +131,7 @@ class DLBelleParser(override val printer: BelleExpr => String,
     (NoCut(formula ~ "~>" ~ formula) |
       term(false) ~ "~>" ~ term(false) |
       (DLParser.systemSymbol | DLParser.programSymbol) ~ "~>" ~ program).
-      map(pair => SubstitutionPair(pair._1, pair._2))
+      map(pair => pair._1.implicitSubst(defs.elaborateToSystemConsts(defs.elaborateToFunctions(pair._2))))
   )
 
   def argList[_: P,A](p: => P[A]): P[List[A]] = P(

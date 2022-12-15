@@ -317,12 +317,21 @@ object AssessmentProver {
       mode.getOrElse(Modes.SYN_EQ) match {
         case Modes.SYN_EQ => (have, expected) match {
           case (h: ExpressionArtifact, e: ExpressionArtifact) => run(() => syntacticEquality(h.expr, e.expr))
+          case (h: ListExpressionArtifact, e: ExpressionArtifact) => check(h, ListExpressionArtifact(List(e.expr)))
+          case (h: ExpressionArtifact, e: ListExpressionArtifact) => check(ListExpressionArtifact(List(h.expr)), e)
+          case (ListExpressionArtifact(h), ListExpressionArtifact(e)) =>
+            run(() => {
+              val checkResults = h.sortBy(_.prettyString).zip(e.sortBy(_.prettyString)).map({
+                case (he, ee) => syntacticEquality(he, ee)
+              })
+              checkResults.find(!_.isProved).getOrElse(checkResults.head)
+            })
           case (TexExpressionArtifact(h), TexExpressionArtifact(e)) => run(() => syntacticEquality(h, e))
           case (SequentArtifact(h), SequentArtifact(e)) => run(() => syntacticEquality(h, e))
           case (TextArtifact(h), TextArtifact(e)) =>
             if (h == e) run(() => prove(Sequent(IndexedSeq(), IndexedSeq(True)), closeT))
             else Right("")
-          case _ => Right("Answer must be a KeYmaera X expression, sequent, or simple list/interval notation, but got " + have.longHintString)
+          case _ => Right("Answer must be a KeYmaera X expression, sequent, list of expressions, or simple list/interval notation, but got " + have.longHintString)
         }
         case Modes.VALUE_EQ => (have, expected) match {
           case (h: ExpressionArtifact, e: ExpressionArtifact) =>
@@ -1273,7 +1282,7 @@ object AssessmentProver {
             case _ => None
           }
           })
-          val percentage = (100.0 * grades.count(_._2 > 0.0)) / grades.size
+          val percentage = if (grades.exists(_._1.points > 0.0)) (100.0 * grades.count(_._2 > 0.0)) / grades.count(_._1.points > 0.0) else 1
           msgStream.println(f"${p.number} ) Sum $percentage%2.1f%%")
           feedback match {
             case Some(s) =>
@@ -1562,8 +1571,9 @@ object AssessmentProver {
   }
 
   private def printJSONGrades(grades: List[(Submission.Problem, Option[String], List[(Submission.Prompt, Double)])], out: OutputStream): Unit = {
-    val problemFields = grades.map({ case (problem, _, _) => problem.title -> JsNumber(problem.points) })
-    val scoreFields = grades.map({ case (problem, _, pg) => problem.title -> JsNumber(pg.map(_._2).sum) })
+    def problemTitle(p: Submission.Problem, i: Int): String = if (p.title.isEmpty) i.toString else i + " " + p.title
+    val problemFields = grades.zipWithIndex.map({ case ((problem, _, _), i) => problemTitle(problem, i) -> JsNumber(problem.points) })
+    val scoreFields = grades.zipWithIndex.map({ case ((problem, _, pg), i) => problemTitle(problem, i) -> JsNumber(pg.map(_._2).sum) })
     val promptScoreFields = grades.flatMap(_._3.map({ case (prompt, score) => prompt.id.toString -> JsNumber(score) }))
     val jsonGrades = JsObject(
       "problems" -> JsObject(problemFields:_*),

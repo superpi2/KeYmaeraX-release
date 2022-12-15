@@ -1,6 +1,7 @@
 angular.module('sequent', ['ngSanitize', 'formula', 'ui.bootstrap', 'ngCookies', 'angularSpinners'])
-  .directive('k4Sequent', ['$rootScope', '$uibModal', '$http', '$document', 'spinnerService', 'sequentProofData', 'derivationInfos',
-      function($rootScope, $uibModal, $http, $document, spinnerService, sequentProofData, derivationInfos) {
+  .directive('k4Sequent', ['$rootScope', '$uibModal', '$http', '$document', '$sce', 'spinnerService', 'sequentProofData',
+      'derivationInfos', 'formulaTools',
+      function($rootScope, $uibModal, $http, $document, $sce, spinnerService, sequentProofData, derivationInfos, formulaTools) {
     return {
         restrict: 'AE',
         scope: {
@@ -45,6 +46,7 @@ angular.module('sequent', ['ngSanitize', 'formula', 'ui.bootstrap', 'ngCookies',
                         size: dialogSize,
                         resolve: {
                           result: function() { return response.data.result; },
+                          assumptions: function() { return response.data.additionalAssumptions; },
                           origFormula: function() { return response.data.origFormula; },
                           cexFormula: function() { return response.data.cexFormula; },
                           cexValues: function() { return response.data.cexValues; },
@@ -146,6 +148,12 @@ angular.module('sequent', ['ngSanitize', 'formula', 'ui.bootstrap', 'ngCookies',
             scope.isFOL = function(formula) {
               //@todo implement
               return true;
+            }
+
+            scope.fmlListHtml = function(fmls) {
+                return $sce.trustAsHtml(fmls.map(function(f) {
+                    return formulaTools.formatSubscriptIndex(formulaTools.formatSpecialNotation(f.formula.string))
+                }).join(", "));
             }
 
             scope.formulaAxiomsMap = {};
