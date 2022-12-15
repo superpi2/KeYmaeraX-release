@@ -271,6 +271,11 @@ object Idioms {
     else pr
   }
 
+  def timesP(t: Rule, n: Int): Provable=>Provable = (pr: Provable) => {
+    if (n > 0) timesP(t, n-1)(pr(t, 0))
+    else pr
+  }
+
   /** Try `s` and recover from proof search control failure with `t`. */
   def or(s: ProvableSig=>ProvableSig, t: ProvableSig=>ProvableSig): ProvableSig=>ProvableSig = (pr: ProvableSig) => {
     try { s(pr) } catch { case _: BelleProofSearchControl => t(pr) }
