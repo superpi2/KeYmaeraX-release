@@ -229,40 +229,43 @@ object Z3Reader {
       val eProofs = ps.dropRight(1).map(convertProofTerm(_, terms, fmls, proofs))
       val conclusion = eProofs(0).conclusion.succ.head
 
-      val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
-        IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
-      // match on term/formula
-      val applyEq: Provable=>Provable = conclusion match {
+      conclusion match {
         case _ : Equal =>
-          (pr: Provable) => TactixLibrary.proveBy(
+
+          val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
+            IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
+
+          val applyEq: Provable=>Provable = (pr: Provable) => TactixLibrary.proveBy(
             ElidingProvable(pr, 0, Declaration(Map.empty)),
             eqL2R(-1 - eProofs(0).conclusion.ante.size)(1)).underlyingProvable
-        case _ : Equiv =>
-          // t1 + t >= 0 --> true
-          (pr: Provable) =>
+          val applyReflexive: Provable=>Provable = (pr: Provable) => UnifyUSCalculus.byUS(
+            Ax.equalReflexive.provable)(ElidingProvable(pr, 0, Declaration(Map.empty))).underlyingProvable
+          val pir = proof(ImplyRight(SuccPos(0)), 1)
+          val proof1 = pir(applyEq(pir.sub(1)), 1)
+          val p1withE = proof1(eProofs(0), 0)(CoHideRight(SuccPos(0)), 0)
+          p1withE.subgoals.head match {
+            case Sequent(_, IndexedSeq(Equal(l, r))) if l == r =>
+              val proof2 = applyReflexive(p1withE)
+              assert(proof2.isProved)
+              proof2
+            case _ =>
+              // unsure if this is correct
+              p1withE
+          }
 
+        case Equiv(l, r) =>
 
-//            val pSig = ProvableSig.startPlainProof(False).reapply(eProofs(0))
-//            val p1 = pSig(UnifyUSCalculus.cutAt(ProvableSig.startPlainProof(False).reapply(pr),
-//              PosInExpr(List(1)))(SuccPosition(1, List(1))), 0)
-//            p1.underlyingProvable
+          val proof = ProvableSig.startPlainProof(Sequent(eProofs(0).conclusion.ante,
+            IndexedSeq(fml)))
+          val p1 = TactixLibrary.proveBy(proof, UnifyUSCalculus.cutAt(r)(1, List(0, 0)))
+
+          throw new IllegalArgumentException(
+            "Encountered a case where monotonicity is used with something " +
+              "other than an equality or equivalence.")
+
         case _ => throw new IllegalArgumentException(
           "Encountered a case where monotonicity is used with something " +
             "other than an equality or equivalence.")
-      }
-      val applyReflexive: Provable=>Provable = (pr: Provable) => UnifyUSCalculus.byUS(
-        Ax.equalReflexive.provable)(ElidingProvable(pr, 0, Declaration(Map.empty))).underlyingProvable
-      val pir = proof(ImplyRight(SuccPos(0)), 1)
-      val proof1 = pir(applyEq(pir.sub(1)), 1)
-      val p1withE = proof1(eProofs(0), 0)(CoHideRight(SuccPos(0)), 0)
-      p1withE.subgoals.head match {
-        case Sequent(_, IndexedSeq(Equal(l, r))) if l == r =>
-          val proof2 = applyReflexive(p1withE)
-          assert(proof2.isProved)
-          proof2
-        case _ =>
-          // unsure if this is correct
-          p1withE
       }
 
     // (not-or-elim not-or-chain conclusion)
