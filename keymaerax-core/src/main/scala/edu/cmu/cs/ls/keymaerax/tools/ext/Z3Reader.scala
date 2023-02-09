@@ -231,10 +231,8 @@ object Z3Reader {
       val conclusion = eProofs(0).conclusion.succ.head
 
       val applyReflexive: Provable=>Provable = (pr0: Provable) => {
-        var i = 0
         var pr: Provable = pr0
-        // for loop, back to front
-        while (i <= pr.subgoals.length - 1) {
+        for (i <- pr.subgoals.length - 1 to 0 by -1) {
           pr.subgoals(i).succ match {
             case _: Equal =>
               pr = pr(UnifyUSCalculus.byUS(
@@ -246,26 +244,10 @@ object Z3Reader {
                 Ax.equivReflexive.provable).apply(
                 ElidingProvable(pr.sub(i), 0, Declaration(Map.empty))).underlyingProvable,
                 pr.subgoals.length - 1)
-            case _ =>
-              i += 1
           }
         }
         pr
       }
-
-      // -----------------------------------------------------------------------------
-//      val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
-//        IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
-//
-//      val applyEq: Provable=>Provable = (pr: Provable) => TactixLibrary.proveBy(
-//        ElidingProvable(pr, 0, Declaration(Map.empty)),
-//        eqL2R(-1 - eProofs(0).conclusion.ante.size)(1)).underlyingProvable
-//
-//      val pir = proof(ImplyRight(SuccPos(0)), 1)
-//      val proof1 = pir(applyEq(pir.sub(1)), 1)
-//      val p1withE1 = proof1(eProofs(0), 0)
-//      val p1withE = p1withE1(CoHideRight(SuccPos(0)), p1withE1.subgoals.length - 1)
-      // -----------------------------------------------------------------------------
 
       val fProof = ProvableSig.startPlainProof(Sequent(eProofs(0).conclusion.ante, IndexedSeq(fml)))
       val eProofSig = ProvableSig.startPlainProof(False).reapply(eProofs(0))
@@ -297,7 +279,7 @@ object Z3Reader {
 
       applyPos match {
         case Some(pos) =>
-          val p2 = fProof(UnifyUSCalculus.useAt(p1, PosInExpr(List(1,0)))(SuccPosition.base0(0, pos)))
+          val p2 = fProof(UnifyUSCalculus.useAt(p1, PosInExpr(List(1,0)))(SuccPosition.base0(0, pos.parent)))
           val p3 = applyReflexive(p2.underlyingProvable)
           assert(p3.isProved)
           p3
