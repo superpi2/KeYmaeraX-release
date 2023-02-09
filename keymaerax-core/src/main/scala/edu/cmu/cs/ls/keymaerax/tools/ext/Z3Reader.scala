@@ -9,7 +9,8 @@ import edu.cmu.cs.ls.keymaerax.btactics.TactixLibrary.{QE, eqL2R, prop, propClos
 import edu.cmu.cs.ls.keymaerax.btactics.macros.DerivationInfoAugmentors.ProvableInfoAugmentor
 import edu.cmu.cs.ls.keymaerax.core
 import edu.cmu.cs.ls.keymaerax.core._
-import edu.cmu.cs.ls.keymaerax.infrastruct.{PosInExpr, SuccPosition}
+import edu.cmu.cs.ls.keymaerax.infrastruct.Augmentors.SequentAugmentor
+import edu.cmu.cs.ls.keymaerax.infrastruct.{FormulaTools, PosInExpr, SuccPosition}
 import edu.cmu.cs.ls.keymaerax.parser.{Declaration, InterpretedSymbols}
 import edu.cmu.cs.ls.keymaerax.pt.{ElidingProvable, ProvableSig}
 import smtlib.theories.Reals
@@ -229,43 +230,79 @@ object Z3Reader {
       val eProofs = ps.dropRight(1).map(convertProofTerm(_, terms, fmls, proofs))
       val conclusion = eProofs(0).conclusion.succ.head
 
-      conclusion match {
-        case _ : Equal =>
-
-          val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
-            IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
-
-          val applyEq: Provable=>Provable = (pr: Provable) => TactixLibrary.proveBy(
-            ElidingProvable(pr, 0, Declaration(Map.empty)),
-            eqL2R(-1 - eProofs(0).conclusion.ante.size)(1)).underlyingProvable
-          val applyReflexive: Provable=>Provable = (pr: Provable) => UnifyUSCalculus.byUS(
-            Ax.equalReflexive.provable)(ElidingProvable(pr, 0, Declaration(Map.empty))).underlyingProvable
-          val pir = proof(ImplyRight(SuccPos(0)), 1)
-          val proof1 = pir(applyEq(pir.sub(1)), 1)
-          val p1withE = proof1(eProofs(0), 0)(CoHideRight(SuccPos(0)), 0)
-          p1withE.subgoals.head match {
-            case Sequent(_, IndexedSeq(Equal(l, r))) if l == r =>
-              val proof2 = applyReflexive(p1withE)
-              assert(proof2.isProved)
-              proof2
+      val applyReflexive: Provable=>Provable = (pr0: Provable) => {
+        var i = 0
+        var pr: Provable = pr0
+        // for loop, back to front
+        while (i <= pr.subgoals.length - 1) {
+          pr.subgoals(i).succ match {
+            case _: Equal =>
+              pr = pr(UnifyUSCalculus.byUS(
+                Ax.equalReflexive.provable).apply(
+                ElidingProvable(pr.sub(i), 0, Declaration(Map.empty))).underlyingProvable,
+                pr.subgoals.length - 1)
+            case _: Equiv =>
+              pr = pr(UnifyUSCalculus.byUS(
+                Ax.equivReflexive.provable).apply(
+                ElidingProvable(pr.sub(i), 0, Declaration(Map.empty))).underlyingProvable,
+                pr.subgoals.length - 1)
             case _ =>
-              // unsure if this is correct
-              p1withE
+              i += 1
           }
+        }
+        pr
+      }
 
-        case Equiv(l, r) =>
+      // -----------------------------------------------------------------------------
+//      val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
+//        IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
+//
+//      val applyEq: Provable=>Provable = (pr: Provable) => TactixLibrary.proveBy(
+//        ElidingProvable(pr, 0, Declaration(Map.empty)),
+//        eqL2R(-1 - eProofs(0).conclusion.ante.size)(1)).underlyingProvable
+//
+//      val pir = proof(ImplyRight(SuccPos(0)), 1)
+//      val proof1 = pir(applyEq(pir.sub(1)), 1)
+//      val p1withE1 = proof1(eProofs(0), 0)
+//      val p1withE = p1withE1(CoHideRight(SuccPos(0)), p1withE1.subgoals.length - 1)
+      // -----------------------------------------------------------------------------
 
-          val proof = ProvableSig.startPlainProof(Sequent(eProofs(0).conclusion.ante,
-            IndexedSeq(fml)))
-          val p1 = TactixLibrary.proveBy(proof, UnifyUSCalculus.cutAt(r)(1, List(0, 0)))
+      val fProof = ProvableSig.startPlainProof(Sequent(eProofs(0).conclusion.ante, IndexedSeq(fml)))
+      val eProofSig = ProvableSig.startPlainProof(False).reapply(eProofs(0))
 
-          throw new IllegalArgumentException(
-            "Encountered a case where monotonicity is used with something " +
-              "other than an equality or equivalence.")
+      var p1 = ProvableSig.startPlainProof(eProofs(0).conclusion.toFormula)
+      p1 = p1(ImplyRight(SuccPos(0)), 0)(eProofSig, 0)
 
-        case _ => throw new IllegalArgumentException(
-          "Encountered a case where monotonicity is used with something " +
-            "other than an equality or equivalence.")
+      if (false){
+        val proof = Provable.startProof(Sequent(eProofs(0).conclusion.ante,
+          IndexedSeq(fml)))(CutRight(conclusion, SuccPos(0)), 0)
+
+        val applyEq: Provable=>Provable = (pr: Provable) => TactixLibrary.proveBy(
+          ElidingProvable(pr, 0, Declaration(Map.empty)),
+          eqL2R(-1 - eProofs(0).conclusion.ante.size)(1)).underlyingProvable
+
+        val pir = proof(ImplyRight(SuccPos(0)), 1)
+        val proof1 = pir(applyEq(pir.sub(1)), 1)
+        val p1withE1 = proof1(eProofs(0), 0)
+        val p1withE = p1withE1(CoHideRight(SuccPos(0)), p1withE1.subgoals.length - 1)
+        p1 = ProvableSig.startPlainProof(False).reapply(p1withE)
+      }
+
+      val applyPos = conclusion match {
+        case Equal(l, _) =>
+          FormulaTools.posOf(fml, l)
+        case Equiv(l, _) =>
+          FormulaTools.posOf(fml, l)
+      }
+
+      applyPos match {
+        case Some(pos) =>
+          val p2 = fProof(UnifyUSCalculus.useAt(p1, PosInExpr(List(1,0)))(SuccPosition.base0(0, pos)))
+          val p3 = applyReflexive(p2.underlyingProvable)
+          assert(p3.isProved)
+          p3
+        case None => throw new IllegalArgumentException(
+          "Did not locate the conclusion within the formula")
       }
 
     // (not-or-elim not-or-chain conclusion)
