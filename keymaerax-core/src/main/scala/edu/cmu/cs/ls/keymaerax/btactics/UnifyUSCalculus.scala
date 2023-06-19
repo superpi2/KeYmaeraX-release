@@ -522,7 +522,7 @@ trait UnifyUSCalculus {
   private[btactics] def useAt(fact: ProvableSig, key: PosInExpr, inst: Option[Subst]=>Subst): BuiltInPositionTactic =
   //@note linearity info no longer holds for nondefault key
     useAtImpl(TacticFactory.ANON, fact, key, defaultMatcher, inst)
-  private[btactics] def useAt(fact: ProvableSig, key: PosInExpr): BuiltInPositionTactic =
+  def useAt(fact: ProvableSig, key: PosInExpr): BuiltInPositionTactic =
     useAt(fact, key, (us: Option[Subst])=>us.getOrElse(throw new InapplicableUnificationKeyFailure("No substitution found by unification, fix given key " + key + " or try to patch locally with own substitution")))
   private[btactics] def useAt(fact: ProvableSig): BuiltInPositionTactic =
     useAt(fact, PosInExpr(0::Nil))
