@@ -5,7 +5,7 @@
 
 package edu.cmu.cs.ls.keymaerax.tools.ext
 
-import edu.cmu.cs.ls.keymaerax.Logging
+import edu.cmu.cs.ls.keymaerax.{Configuration, Logging}
 import edu.cmu.cs.ls.keymaerax.btactics.helpers.DifferentialHelper
 import edu.cmu.cs.ls.keymaerax.core.{Variable, _}
 import edu.cmu.cs.ls.keymaerax.infrastruct.ExpressionTraversal.{ExpressionTraversalFunction, StopTraversal}
@@ -739,32 +739,35 @@ class MathematicaLyapunovSolverTool(override val link: MathematicaLink) extends 
 
   private val LYAPUNOV_NAMESPACE = "Lyapunov`"
 
-  private def lsymbol(s: String) = symbol(LYAPUNOV_NAMESPACE + s)
+  private def lsymbol(s: String): MExpr = symbol(LYAPUNOV_NAMESPACE + s)
 
   private val pegasusPath = PegasusInstaller.pegasusRelativeResourcePath
-  private val pathSegments = scala.reflect.io.File(pegasusPath).segments.map(string)
-  private val joinedPath = fileNameJoin(list(homeDirectory.op :: pathSegments:_*))
+  private val pathsList = Configuration.sanitizedPathSegments(Configuration.KEYMAERAX_HOME_PATH, pegasusPath).map(string)
+  private val joinedPath = fileNameJoin(list(pathsList:_*))
   private val setPathsCmd = compoundExpression(setDirectory(joinedPath), appendTo(path.op, joinedPath))
+
+  /** Wraps `cmd` with the path and exception handling (suppressing). */
+  private def createCommand(cmd: MExpr): MExpr = quiet(compoundExpression(
+    setPathsCmd,
+    needs(string(LYAPUNOV_NAMESPACE), fileNameJoin(list(pathsList :+ string("Primitives") :+ string("Lyapunov.m"):_*))),
+    cmd
+  ))
+
+  /** Converts the differential equation systems `sys`. */
+  private def convertODEs(sys: List[ODESystem]): MExpr = {
+    list(sys.map(ode => {
+      val primedVars = DifferentialHelper.getPrimedVariables(ode)
+      val atomicODEs = DifferentialHelper.atomicOdes(ode)
+      val vars = list(primedVars.map(k2m):_*)
+      val vectorField = list(atomicODEs.map(o => k2m(o.e)):_*)
+      list(vectorField, vars, k2m(ode.constraint))
+    }):_*)
+  }
 
   /** @inheritdoc */
   override def genCLF(sys: List[ODESystem]): Option[Term] = {
-    val input = applyFunc(lsymbol("GenCLF"))(
-      list(sys.map(ode => {
-        val primedVars = DifferentialHelper.getPrimedVariables(ode)
-        val atomicODEs = DifferentialHelper.atomicOdes(ode)
-        val vars = list(primedVars.map(k2m):_*)
-        val vectorField = list(atomicODEs.map(o => k2m(o.e)):_*)
-        list(vectorField, vars, k2m(ode.constraint))
-      }):_*)
-    )
-
-    val command = quiet(compoundExpression(
-      setPathsCmd,
-      needs(string(LYAPUNOV_NAMESPACE), fileNameJoin(list((homeDirectory.op :: pathSegments) :+ string("Primitives") :+ string("Lyapunov.m"):_*))),
-      input
-    ))
-
-    val (_, result) = run(command)
+    val cmd = createCommand(applyFunc(lsymbol("GenCLF"))(convertODEs(sys)))
+    val (_, result) = run(cmd)
     result match {
       case t: Term => flattenPairs(t).headOption
       case t => throw ConversionException("Unexpected Lyapunov Function result: " + t.prettyString) //@todo
@@ -773,24 +776,11 @@ class MathematicaLyapunovSolverTool(override val link: MathematicaLink) extends 
 
   /** @inheritdoc */
   override def genMLF(sys: List[ODESystem], trans: List[(Int, Int, Formula)]): List[Term] = {
-    val input = applyFunc(lsymbol("GenMLF"))(
-      list(sys.map(ode => {
-        val primedVars = DifferentialHelper.getPrimedVariables(ode)
-        val atomicODEs = DifferentialHelper.atomicOdes(ode)
-        val vars = list(primedVars.map(k2m):_*)
-        val vectorField = list(atomicODEs.map(o => k2m(o.e)):_*)
-        list(vectorField, vars, k2m(ode.constraint))
-      }):_*),
+    val cmd = createCommand(applyFunc(lsymbol("GenMLF"))(
+      convertODEs(sys),
       list(trans.map({ case (s, t, g) => list(int(s), int(t), k2m(g)) }):_*)
-    )
-
-    val command = quiet(compoundExpression(
-      setPathsCmd,
-      needs(string(LYAPUNOV_NAMESPACE), fileNameJoin(list((homeDirectory.op :: pathSegments) :+ string("Primitives") :+ string("Lyapunov.m"):_*))),
-      input
     ))
-
-    val (_, result) = run(command)
+    val (_, result) = run(cmd)
     result match {
       case t: Term => flattenPairs(t)
       case t => throw ConversionException("Unexpected Lyapunov Function result: " + t.prettyString) //@todo

@@ -5,7 +5,6 @@
 package edu.cmu.cs.ls.keymaerax.btactics
 
 import java.io.File
-
 import edu.cmu.cs.ls.keymaerax.bellerophon._
 import edu.cmu.cs.ls.keymaerax.bellerophon.parser.BelleParser
 import edu.cmu.cs.ls.keymaerax.btactics.ArithmeticSimplification.smartHide
@@ -27,6 +26,7 @@ import edu.cmu.cs.ls.keymaerax.tools.ext.{AllOf, Atom, Mathematica, OneOf}
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.{List, _}
+import scala.reflect.runtime.universe
 import scala.util.Try
 
 /**
@@ -69,10 +69,13 @@ import scala.util.Try
   * @see [[edu.cmu.cs.ls.keymaerax.core.Rule]]
   * @see [[ToolProvider]]
   */
-object TactixLibrary extends HilbertCalculus
+object TactixLibrary extends TacticProvider with HilbertCalculus
   with SequentCalculus
   with DifferentialEquationCalculus
   with HybridProgramCalculus {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (TactixLibrary.getClass, universe.typeOf[TactixLibrary.type])
+
   import Generator.Generator
 
   private val logger = LoggerFactory.getLogger(getClass) //@note instead of "with Logging" to avoid cyclic dependencies
@@ -544,7 +547,7 @@ object TactixLibrary extends HilbertCalculus
       (if (pos.isTopLevel) SaturateTactic(DifferentialTactics.odeInvariant(tryHard = true, useDw = true)(pos) | ODEInvariance.dRI(pos))
        else DifferentialTactics.diffInd()(pos)) &
         Idioms.doIf(p => p.subgoals.nonEmpty && p.subgoals.forall(_.isFOL))(onAll(QE)) &
-        DebuggingTactics.assertProvableSize(0, (details: String) => new UnprovableAnnotatedInvariant(
+        DebuggingTactics.assertProvableSize(0, details => new UnprovableAnnotatedInvariant(
           "User-supplied invariant " + inv._1.prettyString + " not proved; please double-check and adapt invariant.\nFor example, invariant may hold on some branches but not all: consider using conditional annotations @invariant( (x'=0 -> invA), (x'=2 -> invB) ).\n" + details))
     ))).reduceOption[BelleExpr](_ & _).getOrElse(skip) &
       ODEfinish(invs.nonEmpty)(pos)
@@ -1226,7 +1229,9 @@ object TactixLibrary extends HilbertCalculus
 
     adapt match {
       case None | Some(TactixLibrary.nil) =>
-        expandAllDefs(recordedSubsts) & Idioms.doIfElse(p =>
+        (if (recordedSubsts.nonEmpty) expandAllDefs(recordedSubsts) else skip) &
+        (if (subst.isDefined) expandAllDefs(subst.get.usubst.subsDefsInput.toList) else skip) &
+        Idioms.doIfElse(p =>
           subst.map(_ (p.subgoals.head)).getOrElse(p.subgoals.head) == subst.map(_ (lemma.fact.conclusion)).getOrElse(lemma.fact.conclusion))(byLemma, cutLemma(nil))
       case Some(t) => expandAllDefs(recordedSubsts) & cutLemma(t)
     }

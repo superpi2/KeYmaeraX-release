@@ -27,6 +27,8 @@ import edu.cmu.cs.ls.keymaerax.tools.{SMTQeException, ToolEvidence, ToolExceptio
 import edu.cmu.cs.ls.keymaerax.parser.InterpretedSymbols._
 import org.slf4j.LoggerFactory
 
+import scala.reflect.runtime.universe
+
 /**
   * Implements ODE tactics based on the differential equation axiomatization.
   *
@@ -34,7 +36,9 @@ import org.slf4j.LoggerFactory
   * @see Andre Platzer and Yong Kiam Tan. [[https://doi.org/10.1145/3209108.3209147 Differential equation axiomatization: The impressive power of differential ghosts]]. In Anuj Dawar and Erich Grädel, editors, Proceedings of the 33rd Annual ACM/IEEE Symposium on Logic in Computer Science, LICS'18, ACM 2018.
   */
 
-object ODEInvariance {
+object ODEInvariance extends TacticProvider {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (ODEInvariance.getClass, universe.typeOf[ODEInvariance.type])
 
   private val namespace = "odeinvariance"
   private val logger = LoggerFactory.getLogger(getClass) //@note instead of "with Logging" to avoid cyclic dependencies
@@ -1893,8 +1897,15 @@ object ODEInvariance {
     ).reduce(vecvec_sum)
   }
 
+  @Tactic("[']n", longDisplayName = "nilsolve",
+    premises = "Γ,x=x0,t=0 |- [x'=f(x),t'=1&q(x)&x=y(x0,t)]p(x), Δ",
+    conclusion = "Γ |- [x'=f(x)&q(x)]p(x), Δ",
+    revealInternalSteps = false, displayLevel = "menu")
+  def nilpotentSolve : DependentPositionTactic = nilpotentSolve(false)
+
+
   /** Given a top-level succedent position corresponding to [x'=f(x)&Q]P
-    * with x'=f(x) a linear, nilpotent ODE
+    * with x'=f(x) a linear, nilpotent ODE, solve the differential equation.
     *
     * Adds the (polynomial) solution x=Phi(x_0,t) of that ODE to the domain constraint
     *
@@ -1905,7 +1916,7 @@ object ODEInvariance {
     * --------------- (nilpotent solve)
     * G |- [x'=f(x)&Q]P
     *
-    * @param solveEnd whether to continue with weaken and QE (see rule rendition above)
+    * @param solveEnd whether to continue with differential weaken and QE (see rule rendition above)
     * @return See the rule rendition above
     *         Special failure cases:
     *         1) Linearity heuristic checks fail e.g.: x'=1+x^2-x^2 will be treated as non-linear even though it is really linear

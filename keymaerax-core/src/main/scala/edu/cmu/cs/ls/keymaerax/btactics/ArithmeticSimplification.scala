@@ -17,13 +17,17 @@ import edu.cmu.cs.ls.keymaerax.pt.ProvableSig
 import edu.cmu.cs.ls.keymaerax.tools.ext.CounterExampleTool
 
 import scala.annotation.tailrec
+import scala.reflect.runtime.universe
 
 /**
   * Tactics for simplifying arithmetic sub-goals.
   *
   * @author Nathan Fulton
   */
-object ArithmeticSimplification {
+object ArithmeticSimplification extends TacticProvider {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (ArithmeticSimplification.getClass, universe.typeOf[ArithmeticSimplification.type])
+
   //region Tactics
 
   lazy val smartCoHideAt = new DependentPositionTactic("smartCoHideAt") {
@@ -239,7 +243,8 @@ object ArithmeticSimplification {
   }
 
   private def retainStrongest(fmls: Seq[(Formula, Int)], assumptions: Formula, cex: CounterExampleTool): Seq[(Formula, Int)] = {
-    val pairs = (for (i <- fmls; j <- fmls) yield (i, j)).filter({ case (i@(p, _), j@(q, _)) =>
+    val concreteFmls = fmls.filterNot({ case (f, _) => f.isInstanceOf[PredOf] })
+    val pairs = (for (i <- concreteFmls; j <- concreteFmls) yield (i, j)).filter({ case (i@(p, _), j@(q, _)) =>
       i != j && StaticSemantics.symbols(q).subsetOf(StaticSemantics.symbols(p))
     })
     val irrelevant = pairs.filter({ case ((p, _), (q, _)) => cex.findCounterExample(Imply(And(assumptions, p), q)).isEmpty }).map(_._2)

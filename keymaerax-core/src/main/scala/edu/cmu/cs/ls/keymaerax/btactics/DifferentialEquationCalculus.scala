@@ -11,6 +11,7 @@ import edu.cmu.cs.ls.keymaerax.btactics.macros.Tactic
 import edu.cmu.cs.ls.keymaerax.btactics.TacticFactory._
 
 import scala.collection.immutable._
+import scala.reflect.runtime.universe
 
 /**
   * Differential Equation Calculus for differential dynamic logic.
@@ -18,7 +19,10 @@ import scala.collection.immutable._
   * @author Stefan Mitsch
   * @see [[HilbertCalculus]]
   */
-object DifferentialEquationCalculus extends DifferentialEquationCalculus
+object DifferentialEquationCalculus extends TacticProvider with DifferentialEquationCalculus {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (DifferentialEquationCalculus.getClass, universe.typeOf[DifferentialEquationCalculus.type])
+}
 
 /**
   * Differential Equation Calculus for differential dynamic logic.
@@ -118,7 +122,7 @@ trait DifferentialEquationCalculus {
     conclusion = "Γ |- [x'=f(x) & Q]P, Δ",
     contextPremises = "Γ |- C( [x'=f(x) & Q∧R]P ), Δ ;; Γ |- C( [x'=f(x) & Q]R ), Δ",
     contextConclusion = "Γ |- C( [x'=f(x) & Q]P ), Δ",
-    inputGenerator = "",
+    inputGenerator = "pegasusCandidates",
     revealInternalSteps = true)
   def dC(R: List[Formula]) : DependentPositionWithAppliedInputTactic = inputanon { (pos: Position ) => DifferentialTactics.diffCut(R)(pos)}
 

@@ -23,6 +23,7 @@ import edu.cmu.cs.ls.keymaerax.tools.qe.MathematicaOpSpec
 import scala.annotation.tailrec
 import scala.math.Ordering.Implicits._
 import scala.collection.immutable._
+import scala.reflect.runtime.universe
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -31,7 +32,9 @@ import scala.util.{Failure, Success, Try}
  * @author Nathan Fulton
  * @author Stefan Mitsch
  */
-private object ToolTactics {
+private object ToolTactics extends TacticProvider {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (ToolTactics.getClass, universe.typeOf[ToolTactics.type])
 
   private val namespace = "tooltactics"
 
@@ -45,28 +48,43 @@ private object ToolTactics {
       case _ => false
     }
     def isZ3Provider(p: ToolProvider): Boolean = p.isInstanceOf[Z3ToolProvider]
+    /** Sets the tool provider to the first successfully initialized one in `providers`. If none can be initialized,
+     * keeps the current provider and fails with `msg` (to not fail later entries in same archive file). */
+    def setFirstSuccessfulProvider(providers: List[ToolProvider], msg: String): Unit = {
+      if (providers.isEmpty) throw new TacticAssertionError(msg)
+      try {
+        val p = providers.head
+        // first try initialization, because setProvider below shuts down current provider first even if new provider
+        // does not succeed, which is problematic for later entries in same archive file (until we support temporary
+        // switches and configuration changes in tactics)
+        p.init()
+        if (p.isInitialized) ToolProvider.setProvider(p)
+        else setFirstSuccessfulProvider(providers.tail, msg)
+      } catch {
+        case _: Throwable =>
+          println("Failed to initialize first provider, attempting next")
+          setFirstSuccessfulProvider(providers.tail, msg)
+      }
+    }
     val config = ToolConfiguration.config(tool)
     tool.toLowerCase match {
       case "mathematica" =>
         if (!isWolframProvider(ToolProvider.provider)) {
-          ToolProvider.setProvider(MultiToolProvider(MathematicaToolProvider(config) :: Z3ToolProvider() :: Nil))
-          if (!ToolProvider.isInitialized) {
-            ToolProvider.setProvider(MultiToolProvider(WolframEngineToolProvider(config) :: Z3ToolProvider() :: Nil))
-            if (!ToolProvider.isInitialized) throw new TacticAssertionError("Failed to switch to Mathematica: unable to initialize the connection; the license may be expired.")
-          }
+          setFirstSuccessfulProvider(List(
+            MultiToolProvider(MathematicaToolProvider(config) :: Z3ToolProvider() :: Nil),
+            MultiToolProvider(WolframEngineToolProvider(config) :: Z3ToolProvider() :: Nil)
+          ), "Failed to switch to Mathematica: unable to initialize the connection; the license may be expired.")
         }
       case "wolframengine" =>
         if (!isWolframProvider(ToolProvider.provider)) {
-          ToolProvider.setProvider(MultiToolProvider(WolframEngineToolProvider(config) :: Z3ToolProvider() :: Nil))
-          if (!ToolProvider.isInitialized) {
-            ToolProvider.setProvider(MultiToolProvider(MathematicaToolProvider(config) :: Z3ToolProvider() :: Nil))
-            if (!ToolProvider.isInitialized) throw new TacticAssertionError("Failed to switch to Wolfram Engine: unable to initialize the connection; the license may be expired (try starting Wolfram Engine from the command line to renew the license)")
-          }
+          setFirstSuccessfulProvider(List(
+            MultiToolProvider(WolframEngineToolProvider(config) :: Z3ToolProvider() :: Nil),
+            MultiToolProvider(MathematicaToolProvider(config) :: Z3ToolProvider() :: Nil)
+          ), "Failed to switch to Wolfram Engine: unable to initialize the connection; the license may be expired.")
         }
       case "z3" =>
         if (!isZ3Provider(ToolProvider.provider)) {
-          ToolProvider.setProvider(new Z3ToolProvider)
-          if (!ToolProvider.isInitialized) throw new TacticAssertionError("Failed to switch to Z3: unable to initialize the connection; please check the configured path to Z3")
+          setFirstSuccessfulProvider(List(new Z3ToolProvider), "Failed to switch to Z3: unable to initialize the connection; please check the configured path to Z3")
         }
       case _ => throw new InputFormatFailure("Unknown tool " + tool + "; please use one of mathematica|wolframengine|z3")
     }
@@ -607,10 +625,10 @@ private object ToolTactics {
           case ex: UnificationException =>
             //@note looks for specific transform position until we have better formula diff
             //@note Exception reports variable unifications and function symbol unifications swapped
-            if (ex.input.asExpr.isInstanceOf[FuncOf] && !ex.shape.asExpr.isInstanceOf[FuncOf]) {
-              FormulaTools.posOf(e, ex.shape.asExpr) match {
+            if (ex.input.isInstanceOf[FuncOf] && !ex.shape.isInstanceOf[FuncOf]) {
+              FormulaTools.posOf(e, ex.shape) match {
                 case Some(pp) =>
-                  TactixLibrary.transform(ex.input.asExpr)(pos.topLevel ++ pp) &
+                  TactixLibrary.transform(ex.input)(pos.topLevel ++ pp) &
                     DebuggingTactics.assertE(expandTo, "Unexpected edit result", new TacticInapplicableFailure(_))(pos) |
                   TactixLibrary.transform(expandTo)(pos) &
                     DebuggingTactics.assertE(expandTo, "Unexpected edit result", new TacticInapplicableFailure(_))(pos)
@@ -619,9 +637,9 @@ private object ToolTactics {
                     DebuggingTactics.assertE(expandTo, "Unexpected edit result", new TacticInapplicableFailure(_))(pos)
               }
             } else {
-              FormulaTools.posOf(e, ex.input.asExpr) match {
+              FormulaTools.posOf(e, ex.input) match {
                 case Some(pp) =>
-                  TactixLibrary.transform(ex.shape.asExpr)(pos.topLevel ++ pp) &
+                  TactixLibrary.transform(ex.shape)(pos.topLevel ++ pp) &
                     DebuggingTactics.assertE(expandTo, "Unexpected edit result", new TacticInapplicableFailure(_))(pos) |
                   TactixLibrary.transform(expandTo)(pos) &
                     DebuggingTactics.assertE(expandTo, "Unexpected edit result", new TacticInapplicableFailure(_))(pos)

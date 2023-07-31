@@ -15,12 +15,15 @@ import edu.cmu.cs.ls.keymaerax.parser.InterpretedSymbols
 import edu.cmu.cs.ls.keymaerax.pt.ProvableSig
 
 import scala.collection.immutable._
+import scala.reflect.runtime.universe
 
 /**
  * Implementation: Tactics to rewrite equalities and introduce abbreviations.
   *
  */
-private object EqualityTactics {
+private object EqualityTactics extends TacticProvider {
+  /** @inheritdoc */
+  override def getInfo: (Class[_], universe.Type) = (EqualityTactics.getClass, universe.typeOf[EqualityTactics.type])
 
   private val namespace = "eq"
 
@@ -142,7 +145,7 @@ private object EqualityTactics {
           (closeIdWith(SuccPos(sequent.succ.length)).computeResult _, 0)
           )
       case Some(e) => throw new TacticInapplicableFailure("eqL2R only applicable to equalities l=r, but got " + e.prettyString)
-      case None => throw new IllFormedTacticApplicationException("Position " + pos + " does not point to a valid position in sequent " + sequent.prettyString)
+      case None => throw new IllFormedTacticApplicationException("Position " + eqPos + " does not point to a valid position in sequent " + sequent.prettyString)
     }
   }
 
@@ -160,7 +163,7 @@ private object EqualityTactics {
           (useAt(Ax.equalCommute)('L, Equal(rhs, lhs)).computeResult _, 0)
           )
       case Some(e) => throw new TacticInapplicableFailure("eqR2L only applicable to equalities l=r, but got " + e.prettyString)
-      case None => throw new IllFormedTacticApplicationException("Position " + pos + " does not point to a valid position in sequent " + sequent.prettyString)
+      case None => throw new IllFormedTacticApplicationException("Position " + eqPos + " does not point to a valid position in sequent " + sequent.prettyString)
     }
   }
 

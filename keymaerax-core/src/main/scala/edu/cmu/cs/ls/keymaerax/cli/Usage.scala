@@ -22,9 +22,14 @@ object Usage {
       case "-tactic" =>  println(noValueMessage + "Please use: -tactic FILENAME.[scala|kyt]\n\n" + usage)
       case "-mathkernel" => println(noValueMessage + "Please use: -mathkernel PATH_TO_" + DefaultConfiguration.defaultMathLinkName._1 + "_FILE\n\n" + usage)
       case "-jlink" => println(noValueMessage + "Please use: -jlink PATH_TO_DIRECTORY_CONTAINS_" +  DefaultConfiguration.defaultMathLinkName._2 + "_FILE\n\n" + usage)
+      case "-jlinktcpip" => println(noValueMessage + "Please use: -jlinktcpip [true|false]\n\n" + usage)
+      case "-jlinkinterface" => println(noValueMessage + "Please use: -jlinkinterface [string|expr]\n\n" + usage)
+      case "-parallelqe" => println(noValueMessage + "Please use: -parallelqe [true|false]\n\n" + usage)
+      case "-qemethod" => println(noValueMessage + "Please use: -qemethod [Reduce|Resolve]\n\n" + usage)
       case "-z3path" => println(noValueMessage + "Please use: -z3path PATH_TO_z3_FILE\n\n" + usage)
       case "-tool" => println(noValueMessage + "Please use: -tool mathematica|wolframengine|z3\n\n" + usage)
       case "-grade" => println(noValueMessage + "Please use: -grade FILENAME.json [-exportanswers [-out DIR]] [-skiponparseerror]\n\n" + usage)
+      case "-proofStatisticsPrinter" => println(noValueMessage + "Please use: -proofStatisticsPrinter [default|arch-nln|arch-hstp]\n\n" + usage)
       case _ =>  println("[Error] Unknown option " + option + "\n\n" + usage)
     }
   }
@@ -58,6 +63,21 @@ object Usage {
       |  -tool mathematica|z3 choose which tool to use for real arithmetic
       |  -mathkernel MathKernel(.exe) path to Mathematica kernel executable
       |  -jlink path/to/jlinkNativeLib path to Mathematica J/Link library directory
+      |  -jlinkinterface string|expr whether to send Mathematica commands as
+      |                              strings (more robust) or as
+      |                              expr (supports larger queries)
+      |                              Default: string (unless configured in keymaerax.conf)
+      |  -jlinktcpip true|false whether to connect to Mathematica with
+      |                         process communication or
+      |                         over TCP/IP (more robust)
+      |                         Default: false (unless configured in keymaerax.conf)
+      |  -qemethod Reduce|Resolve whether to use
+      |                           Reduce (solves equations and eliminates quantifiers) or
+      |                           Resolve (eliminates quantifiers)
+      |                           Default: Reduce (unless configured in keymaerax.conf)
+      |  -parallelqe true|false whether to attempt multiple QE alternatives in parallel
+      |                         Default: false (unless configured in keymaerax.conf)
+      |  -z3path path/to/z3 path to Z3 executable
       |  -timeout  how many seconds to try proving before giving up, forever if <=0
       |  -monitor  ctrl|model what kind of monitor to generate with ModelPlex
       |  -vars     use ordered list of variables, treating others as constant functions
